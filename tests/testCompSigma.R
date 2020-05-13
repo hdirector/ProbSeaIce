@@ -1,6 +1,10 @@
 #test compSigma function that runs in C++
 library("IceCast")
 library("fields")
+
+###########################
+#Check covariance functions
+###########################
 n_lines <- 10
 sigma <- c(rep(1, n_lines/2), rep(2, n_lines/2))
 kappa <- 5
