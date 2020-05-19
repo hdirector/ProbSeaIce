@@ -3,10 +3,10 @@
 #-------------------------------------------------------------------------------
 rm(list = ls())
 set.seed(103)
-n_gen <- 10
+n_gen <- 100
 
 #load task information
-task_id <- 244
+task_id <- 241
 task_path <-"/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/exper_design/ecmwfExper.rda"
 load(task_path)
 task <- task_table[task_id,]
@@ -29,8 +29,8 @@ train_bc_start_year <- 1993
 
 #misc fixed constants
 level <- 15
-n_iter <- 5000#150000
-burn_in <- 2500#50000
+n_iter <- 55000
+burn_in <- 5000
 
 #load package
 library("IceCast")
@@ -58,7 +58,6 @@ dyn_bin[sip >= 0.5] <- 1
 dyn_bin[sip < 0.5] <- 0
 print("loaded dynamic model forecasts")
 
-
 #compute lengths ice extends y
 y_bc <- find_y(start_year = train_bc_start_year, end_year = train_end_year,
                obs_start_year = train_bc_start_year,
@@ -70,15 +69,15 @@ y_bc <- find_y(start_year = train_bc_start_year, end_year = train_end_year,
 #Contour-shift for bias correction
 #------------------------------------------------------------------------------
 #apply contour-shifting
-bc_bin_poly <- contour_shift(y = y_bc,
+cont_bin_poly <- contour_shift(y = y_bc,
                              predicted = dyn_bin[length(dyn_start_year:forecast_year),
                                                      month,,],
                              bc_year = forecast_year,
                              pred_start_year = dyn_start_year, reg_info, level,
                              dat_type_pred)
 
-bc_bin <- conv_to_grid(bc_bin_poly)
-#save(bc_bin, file = sprintf(".../%s/bc_bin/bc_bin_month%i_year%i_train%i_%i_init%i.rda",
+cont_bin <- conv_to_grid(cont_bin_poly)
+#save(cont_bin, file = sprintf(".../%s/cont_bin/cont_bin_month%i_year%i_train%i_%i_init%i.rda",
 #                                dyn_mod, month, forecast_year, train_start_year,
 #                                 train_end_year, init_month))
 
@@ -96,6 +95,7 @@ y_train_all <- find_y(start_year = train_start_year, end_year = train_end_year,
                       predicted = NULL, reg_info, month, level,
                       dat_type_obs, dat_type_pred, obs_only = TRUE)
 
+
 #Determine which regions to fit, and the 'full' polygon
 temp <- to_fit(y_obs = y_train_all$obs, reg_info)
 regs_to_fit <- temp$regs_to_fit
@@ -109,7 +109,7 @@ prop_train <- y_to_prop(y = y_train, regs_to_fit, reg_info)
 prop_train <- lapply(prop_train, function(y){sapply(y, function(x){x})})
 
 #remove fixed lines in region 1
-prop_train[[1]] <- prop_train[[1]][reg_info$line_fit1,]
+#prop_train[[1]] <- prop_train[[1]][reg_info$line_fit1,]
 
 #convert observations to proportions and logit of proportions
 prop_train_tilde <- list()
@@ -122,13 +122,13 @@ for (r in regs_to_fit) {
 }
 
 #convert bias-corrected lengths to proportions
-y_bc <- find_y_1(ice = bc_bin_poly, reg_info)
+y_bc <- find_y_1(ice = cont_bin_poly, reg_info)
 prop_bc <- y_to_prop(y = y_bc, regs_to_fit, reg_info)
 for (r in regs_to_fit) {
   prop_bc[[r]][prop_bc[[r]] >= 1 - eps] <- 1 - eps
   prop_bc[[r]][prop_bc[[r]] <= eps] <- eps
 }
-prop_bc[[1]] <- prop_bc[[1]][reg_info$line_fit1]
+#prop_bc[[1]] <- prop_bc[[1]][reg_info$line_fit1]
 
 #start_year_prior <- 1981
 #end_year_prior <- 1994
@@ -149,8 +149,8 @@ prop_bc[[1]] <- prop_bc[[1]][reg_info$line_fit1]
 # lb_prop <- c(.35, rep(eps, 4))
 
 #sigma bounds
-ub_prop <- c(.99, .99, .99, .99, .73)
-lb_prop <- c(.15, .01, .01, .01, .01)
+ub_props <- c(.99, .99, .99, .99, .73)
+lb_props <- c(.15, .01, .01, .01, .01)
 
 #Run MCMC chains
 print("starting MCMC chains")
@@ -158,16 +158,17 @@ res <- list()
 for (r in regs_to_fit) {
     start_time <- proc.time()
     res[[r]] <- fit_cont_pars(r = r, n_iter = n_iter,
-                              y_obs_r = prop_train_tilde[[r]],
-                              reg_info = reg_info, prop0_r = prop_bc[[r]],
-                              ub_prop = ub_prop[r], lb_prop = lb_prop[r])
+                              prop_tilde = prop_train_tilde[[r]],
+                              reg_info = reg_info, prop0 = prop_bc[[r]],
+                              ub_prop = ub_props[r], lb_prop = lb_props[r])
     end_time <- proc.time()
     elapse_time <- end_time - start_time
     print(sprintf("MCMC for region %i finished, elapsed time %f", r, elapse_time[3]))
 }
-# save(res, file = sprintf("/Users/hdirector/Desktop/fit_Month%i_Train%i_%i.rda",
-#                            month, train_start_year, train_end_year))
-
+save(res, file = sprintf("/Users/hdirector/Desktop/cont_fit_Month%i_Train%i_%i_init%i.rda",
+                            month, train_start_year, train_end_year, init_month))
+# load(sprintf("/Users/hdirector/Desktop/fit_Month%i_Train%i_%i_init%i.rda",
+#              month, train_start_year, train_end_year, init_month))
 #Compute mu and sigma for each region
 pars <- list()
 for (r in regs_to_fit) {
@@ -182,14 +183,16 @@ print("fitting complete")
 #generate contours
 indiv_conts <- list()
 for (r in regs_to_fit) {
-  indiv_conts[[r]] <- gen_cont(r, pars_r = pars[[r]], reg_info, n_gen)
+  indiv_conts[[r]] <- gen_cont(r, pars_r = pars[[r]], reg_info, n_gen,
+                               rand = res[[r]]$rand, start = res[[r]]$start,
+                               start_inds = res[[r]]$start_inds,
+                               end = res[[r]]$end, end_inds = res[[r]]$end_inds)
   print(sprintf("contours for region %i generated", r))
 }
 
 conts <- merge_conts(conts = indiv_conts, full = full)
-prob_cont <- prob_map(merged = conts)
-# save(hybrid_prob, file = sprintf(".../%s/hybrid_prob/hybrid_prob_month%i_year%i_train%i_%i_init%i.rda",
-#                                 dyn_mod, month, forecast_year, train_start_year, train_end_year, init_month))
-print("completed hybrid_prob")
+cont_prob <- prob_map(merged = conts)
+save(cont_prob, file = "/users/hdirector/desktop/cont_prob.rda")
+print("completed cont_prob")
 print("job complete")
 

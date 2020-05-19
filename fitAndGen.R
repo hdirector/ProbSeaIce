@@ -30,8 +30,8 @@ train_bc_start_year <- 1993
 
 #misc fixed constants
 level <- 15
-n_iter <- 150000
-burn_in <- 50000
+n_iter <- 55000
+burn_in <- 5000
 
 #load package
 library("IceCast")
@@ -70,17 +70,17 @@ y_bc <- find_y(start_year = train_bc_start_year, end_year = train_end_year,
 #Contour-shift for bias correction
 #------------------------------------------------------------------------------
 #apply contour-shifting
-bc_bin_poly <- contour_shift(y = y_bc,
+cont_bin_poly <- contour_shift(y = y_bc,
                              predicted = dyn_bin[length(dyn_start_year:forecast_year),
                                                  month,,],
                              bc_year = forecast_year,
                              pred_start_year = dyn_start_year, reg_info, level,
                              dat_type_pred)
 
-bc_bin <- conv_to_grid(bc_bin_poly)
-save(bc_bin, file = sprintf("/homes/direch/probForecast/results/bc_bin/%s/bc_bin/bc_bin__month%i_year%i_train%i_%i_init%i.rda",
-                                dyn_mod, month, forecast_year, train_start_year,
-                                train_end_year, init_month))
+cont_bin <- conv_to_grid(cont_bin_poly)
+save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_bin/cont_bin__month%i_year%i_train%i_%i_init%i.rda",
+                               month, forecast_year, train_start_year,
+                               train_end_year, init_month))
 
 
 #------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ for (r in regs_to_fit) {
 }
 
 #convert bias-corrected lengths to proportions
-y_bc <- find_y_1(ice = bc_bin_poly, reg_info)
+y_bc <- find_y_1(ice = cont_bin_poly, reg_info)
 prop_bc <- y_to_prop(y = y_bc, regs_to_fit, reg_info)
 for (r in regs_to_fit) {
   prop_bc[[r]][prop_bc[[r]] >= 1 - eps] <- 1 - eps
@@ -131,8 +131,8 @@ for (r in regs_to_fit) {
 prop_bc[[1]] <- prop_bc[[1]][reg_info$line_fit1]
 
 #sigma bounds
-ub_prop <- c(.99, .99, .99, .99, .7263)
-lb_prop <- c(.35, .01, .01, .01, .01)
+ub_props <- c(.99, .99, .99, .99, .73)
+lb_props <- c(.15, .01, .01, .01, .01)
 
 #Run MCMC chains
 print("starting MCMC chains")
@@ -140,13 +140,14 @@ res <- list()
 for (r in regs_to_fit)  {
   start_time <- proc.time()
   res[[r]] <- fit_cont_pars(r = r, n_iter = n_iter,
-                            y_obs_r = prop_train_tilde[[r]],
-                            reg_info = reg_info, prop0_r = prop_bc[[r]])
+                            prop_tilde = prop_train_tilde[[r]],
+                            reg_info = reg_info, prop0 = prop_bc[[r]],
+                            ub_prop = ub_props[r], lb_prop = lb_props[r])
   end_time <- proc.time()
   elapse_time <- end_time - start_time
   print(sprintf("MCMC for region %i finished, elapsed time %f", r, elapse_time[3]))
 }
-save(res, file = sprintf("/homes/direch/probForecast/results/fits/fit_Month%i_Train%i_%i.rda",
+save(res, file = sprintf("/homes/direch/probForecast/results/cont_fits/cont_fit_Month%i_Train%i_%i.rda",
                           month, train_start_year, train_end_year))
 
 #Compute mu and sigma for each region
@@ -163,17 +164,19 @@ print("fitting complete")
 #generate contours
 indiv_conts <- list()
 for (r in regs_to_fit) {
-  indiv_conts[[r]] <- gen_cont(r, pars_r = pars[[r]], reg_info, n_gen)
+  indiv_conts[[r]] <- gen_cont(r, pars_r = pars[[r]], reg_info, n_gen,
+                               rand = res[[r]]$rand, start = res[[r]]$start,
+                               start_inds = res[[r]]$start_inds,
+                               end = res[[r]]$end, end_inds = res[[r]]$end_inds)
   print(sprintf("contours for region %i generated", r))
 }
 
 conts <- merge_conts(conts = indiv_conts, full = full)
-prob <- prob_map(merged = conts)
-save(prob, file = sprintf("/homes/direch/probForecast/results/mcf_prob/%s/prob_month%i_year%i_train%i_%i_init%i.rda",
-                                dyn_mod, month, forecast_year, train_start_year, train_end_year, init_month))
-save(conts, file = sprintf("/homes/direch/probForecast/results/mcf_conts/%s/conts_month%i_year%i_train%i_%i_init%i.rda",
-                          dyn_mod, month, forecast_year, train_start_year, train_end_year, init_month))
-
-print("completed hybrid_prob")
+save(conts, file = sprintf("/homes/direch/probForecast/results/cont_conts/conts_month%i_year%i_train%i_%i_init%i.rda",
+                           month, forecast_year, train_start_year, train_end_year, init_month))
+cont_prob <- prob_map(merged = conts)
+save(cont_prob, file = sprintf("/homes/direch/probForecast/results/cont_prob/prob_month%i_year%i_train%i_%i_init%i.rda",
+                            month, forecast_year, train_start_year, train_end_year, init_month))
+print("completed cont_prob")
 print("job complete")
 
