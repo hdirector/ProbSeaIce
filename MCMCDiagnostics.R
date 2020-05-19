@@ -2,11 +2,12 @@
 #Focuses on forecast for September 2005 at 2-month lead
 
 #load MCMC results
-load("Results/cont_fits/fit_Month9_Train1995_2004_init7.rda")
+load("/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Results/cont_fits/fit_Month9_Train1995_2004_init7.rda")
 
 #libraries
 library("coda") #for raftery.diag()
 library("xtable")
+library("IceCast")
 
 #general info
 regs_to_fit <- which(sapply(res, function(x){!is.null(x)}))
@@ -14,6 +15,7 @@ reg_names <- c("Central Arctic", "Baffin Bay", "Greenland Sea") #need to update 
 n_reg <- length(regs_to_fit)
 n_iter <- length(res[[1]]$kappa)
 quants_to_assess <- c(.5, .85, 1) #what quantiles to assess when there is more than on parameter value
+eps <- .01
 
 #--------------------------
 #Assess sigma
@@ -39,7 +41,7 @@ for (j in 1:n_reg) {
     #WANT sigma's at boundary here
     at_bd <- FALSE
     if ((sum(abs(res[[r]]$sigma[i,] - rep(0, n_iter)) <= .05)/n_iter >= .95) ||
-          (sum(abs(res[[r]]$sigma[i,] - rep(beta_sigma0, n_iter)) <= .05)/n_iter >= .95)) {
+        (sum(abs(res[[r]]$sigma[i,] - rep(beta_sigma0, n_iter)) <= .05)/n_iter >= .95)) {
         at_bd <- TRUE
         N_sigma[i] <- NA
         M_sigma[i] <- NA
@@ -54,13 +56,13 @@ for (j in 1:n_reg) {
 
   #pull out quantiles
   N_quants <- quantile(N_sigma, quants_to_assess, na.rm = T)
-  N_sigma_rd[j, ] <- c(reg_names[r],  N_quants)
+  N_sigma_rd[j, ] <- c(reg_names[j],  N_quants)
   M_quants <- quantile(M_sigma, quants_to_assess, na.rm = T)
-  M_sigma_rd[j,] <- c(reg_names[r], M_quants)
-  ind_85 <- which.min(abs(N_sigma - N_quants[2]))
+  M_sigma_rd[j,] <- c(reg_names[j], M_quants)
+  ind_50 <- which.min(abs(N_sigma - N_quants[1]))
 
   #plot results
-  plot(seq(1, n_iter), res[[r]]$sigma[ind_85,], type= "l",
+  plot(seq(1, n_iter), res[[r]]$sigma[ind_50,], type= "l",
           xlab = "Iteration", ylab = expression(sigma),
           main = sprintf("%s", reg_names[j]))
 }
@@ -72,7 +74,7 @@ xtable(N_sigma_rd)
 #Assess mu
 #--------------------------
 N_mu_rd <- M_mu_rd <- matrix(ncol = length(quants_to_assess) + 1, nrow = n_reg)
-colnames(N_mu_rd) <- colnames(M_mu_rd) <- c("Region",  
+colnames(N_mu_rd) <- colnames(M_mu_rd) <- c("Region",
                                             paste("n_", quants_to_assess, sep = ""))
 #png(filename = sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_mu.png",
 #                       r), res = 100)
@@ -83,22 +85,29 @@ for (j in 1:n_reg) {
   N_mu <- rep(NA, n_lines)
   M_mu <- rep(NA, n_lines)
   for (i in 1:n_lines) {
-    #compute raftery.diag()
-    lb <- raftery.diag(res[[r]]$mu[i,], q = .025, r = .0125)
-    ub <- raftery.diag(res[[r]]$mu[i,], q = .975, r = .0125)
-    N_mu[i] <- max(lb$resmatrix[,"N"], ub$resmatrix[,"N"])
-    M_mu[i] <- max(lb$resmatrix[,"M"], ub$resmatrix[,"M"])
+    if ((sum(abs(res[[r]]$mu[i,] - rep(logit(eps), n_iter)) <= .05)/n_iter >= .95) ||
+       (sum(abs(res[[r]]$mu[i,] - rep(logit(1 - eps), n_iter)) <= .05)/n_iter >= .95)) {
+      at_bd <- TRUE
+      N_sigma[i] <- NA
+      M_sigma[i] <- NA
+    } else {
+      #compute raftery.diag()
+      lb <- raftery.diag(res[[r]]$mu[i,], q = .025, r = .0125)
+      ub <- raftery.diag(res[[r]]$mu[i,], q = .975, r = .0125)
+      N_mu[i] <- max(lb$resmatrix[,"N"], ub$resmatrix[,"N"])
+      M_mu[i] <- max(lb$resmatrix[,"M"], ub$resmatrix[,"M"])
+    }
   }
-  
+
   #pull out quantiles
   N_quants <- quantile(N_mu, quants_to_assess, na.rm = T)
   N_mu_rd[j, ] <- c(reg_names[j],  N_quants)
   M_mu <- quantile(M_sigma, quants_to_assess, na.rm = T)
   M_mu_rd[j,] <- c(reg_names[j], M_quants)
-  ind_85 <- which.min(abs(N_mu - N_quants[2]))
-  
+  ind_50 <- which.min(abs(N_mu - N_quants[1]))
+
   #plot results
-  plot(seq(1, n_iter), res[[r]]$mu[ind_85,], type= "l",
+  plot(seq(1, n_iter), res[[r]]$mu[ind_50,], type= "l",
        xlab = "Iteration", ylab = expression(sigma),
        main = sprintf("%s", reg_names[j]))
 }
@@ -108,7 +117,7 @@ xtable(N_mu_rd)
 #--------------------------
 #Assess kappa
 #--------------------------
-n_kappa_rd <- matrix(ncol = 2, nrow = n_reg)
+N_kappa_rd <- M_kappa_rd <-  matrix(ncol = 2, nrow = n_reg)
 colnames(n_kappa_rd) <- c("Region",  "n")
 #png(sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_rho.png"),
 #    res = 100)
@@ -117,7 +126,8 @@ for (j in 1:n_reg) {
   r <- regs_to_fit[j]
   lb <- raftery.diag(res[[r]]$kappa, q = .025, r = .0125)
   ub <- raftery.diag(res[[r]]$kappa, q = .975, r = .0125)
-  n_kappa_rd[j,] <- max(lb$resmatrix[,"N"], ub$resmatrix[,"N"])
+  N_kappa_rd[j,] <- c(reg_names[j], max(lb$resmatrix[,"N"], ub$resmatrix[,"N"]))
+  M_kappa_rd[j,] <- c(reg_names[j], max(lb$resmatrix[,"M"], ub$resmatrix[,"M"]))
   plot(1:n_iter, res[[r]]$kappa, type= 'l', xlab = "Iteration",
        ylab = expression(kappa), main = sprintf("Traceplot, %s", reg_names[j]))
 }
