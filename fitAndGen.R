@@ -90,19 +90,16 @@ save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_
 y_years_bc <- y_bc$start_year:y_bc$end_year
 n_bc_years <- length(y_years_bc)
 train_ind <- (1:n_bc_years)[y_years_bc %in% train_start_year:train_end_year]
-y_train_all <- find_y(start_year = train_start_year, end_year = train_end_year,
-                      obs_start_year = train_start_year,
-                      pred_start_year = NULL, observed = obs[train_ind,month,,],
-                      predicted = NULL, reg_info, month, level,
-                      dat_type_obs, dat_type_pred, obs_only = TRUE)
+y_train <- find_y(start_year = train_start_year, end_year = train_end_year,
+                  obs_start_year = train_start_year,
+                  pred_start_year = NULL, observed = obs[train_ind, month,,],
+                  predicted = NULL, reg_info, month, level,
+                  dat_type_obs, dat_type_pred, obs_only = TRUE)
 
 #Determine which regions to fit, and the 'full' polygon
 temp <- to_fit(y_obs = y_train_all$obs, reg_info)
 regs_to_fit <- temp$regs_to_fit
 full <- temp$full
-
-#For reg 1, keep only y that correspond to not touching land
-y_train <- y_train_all$obs
 
 #convert lengths to proportions and transformed porportions
 prop_train <- y_to_prop(y = y_train, regs_to_fit, reg_info)
@@ -174,5 +171,4 @@ cont_prob <- prob_map(merged = conts)
 save(cont_prob, file = sprintf("/homes/direch/probForecast/results/cont_prob/prob_month%i_year%i_train%i_%i_init%i.rda",
                             month, forecast_year, train_start_year, train_end_year, init_month))
 print("completed cont_prob")
-print("job complete")
 
