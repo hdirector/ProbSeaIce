@@ -3,10 +3,10 @@
 #-------------------------------------------------------------------------------
 rm(list = ls())
 set.seed(103)
-n_gen <- 100
+n_gen <- 5#100
 
 #load task information
-task_id <- 241
+task_id <- 1
 task_path <-"/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/exper_design/ecmwfExper.rda"
 load(task_path)
 task <- task_table[task_id,]
@@ -29,8 +29,8 @@ train_bc_start_year <- 1993
 
 #misc fixed constants
 level <- 15
-n_iter <- 55000
-burn_in <- 5000
+n_iter <- 1000#55000
+burn_in <- 500#5000
 
 #load package
 library("IceCast")
@@ -108,8 +108,6 @@ y_train <- y_train_all$obs
 prop_train <- y_to_prop(y = y_train, regs_to_fit, reg_info)
 prop_train <- lapply(prop_train, function(y){sapply(y, function(x){x})})
 
-#remove fixed lines in region 1
-#prop_train[[1]] <- prop_train[[1]][reg_info$line_fit1,]
 
 #convert observations to proportions and logit of proportions
 prop_train_tilde <- list()
@@ -128,28 +126,9 @@ for (r in regs_to_fit) {
   prop_bc[[r]][prop_bc[[r]] >= 1 - eps] <- 1 - eps
   prop_bc[[r]][prop_bc[[r]] <= eps] <- eps
 }
-#prop_bc[[1]] <- prop_bc[[1]][reg_info$line_fit1]
-
-#start_year_prior <- 1981
-#end_year_prior <- 1994
-#prior info
-#load data
-# all <- IceCast::read_monthly_BS(start_year, end_year,
-#                                 "/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Data/bootstrapV3_1/",
-#                                 version = 3.1)
-# march <- apply(all[,3,,], 1, function(x){get_region(x, dat_type = "bootstrap",
-#                                            level = 15)})
-# #save(march, file = "/users/hdirector/desktop/march.rda")
-# load(file = "/users/hdirector/desktop/march.rda")
-# y <- lapply(march, function(x){find_y_1(ice = x, reg_info)})
-# props <- lapply(y, function(x){y_to_prop(x, regs_to_fit = 1:5, reg_info)})
-# prop_max <- sapply(props, function(x){sapply(x, max)})
-# ub_prop <- apply(prop_max, 1, max)
-# ub_prop[ub_prop >= 1] <- 1 - eps
-# lb_prop <- c(.35, rep(eps, 4))
 
 #sigma bounds
-ub_props <- c(.99, .99, .99, .99, .73)
+ub_props <- c(.99, .99, .99, .99, .72)
 lb_props <- c(.15, .01, .01, .01, .01)
 
 #Run MCMC chains
@@ -161,7 +140,7 @@ for (r in regs_to_fit) {
                               prop_tilde = prop_train_tilde[[r]],
                               reg_info = reg_info, prop0 = prop_bc[[r]],
                               ub_prop = ub_props[r], lb_prop = lb_props[r])
-    end_time <- proc.time()
+    rend_time <- proc.time()
     elapse_time <- end_time - start_time
     print(sprintf("MCMC for region %i finished, elapsed time %f", r, elapse_time[3]))
 }

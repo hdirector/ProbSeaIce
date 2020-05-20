@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 rm(list = ls())
 set.seed(103)
-n_gen <- 100
+n_gen <- 2#100
 
 #load task information
 args <- commandArgs(trailingOnly =TRUE)
@@ -30,8 +30,8 @@ train_bc_start_year <- 1993
 
 #misc fixed constants
 level <- 15
-n_iter <- 55000
-burn_in <- 5000
+n_iter <- 1000#55000
+burn_in <- 500 #5000
 
 #load package
 library("IceCast")
@@ -78,7 +78,7 @@ cont_bin_poly <- contour_shift(y = y_bc,
                              dat_type_pred)
 
 cont_bin <- conv_to_grid(cont_bin_poly)
-save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_bin/cont_bin__month%i_year%i_train%i_%i_init%i.rda",
+save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_bin__month%i_year%i_train%i_%i_init%i.rda",
                                month, forecast_year, train_start_year,
                                train_end_year, init_month))
 
@@ -108,9 +108,6 @@ y_train <- y_train_all$obs
 prop_train <- y_to_prop(y = y_train, regs_to_fit, reg_info)
 prop_train <- lapply(prop_train, function(y){sapply(y, function(x){x})})
 
-#remove fixed lines in region 1
-prop_train[[1]] <- prop_train[[1]][reg_info$line_fit1,]
-
 #convert observations to proportions and logit of proportions
 prop_train_tilde <- list()
 for (r in regs_to_fit) {
@@ -128,10 +125,9 @@ for (r in regs_to_fit) {
   prop_bc[[r]][prop_bc[[r]] >= 1 - eps] <- 1 - eps
   prop_bc[[r]][prop_bc[[r]] <= eps] <- eps
 }
-prop_bc[[1]] <- prop_bc[[1]][reg_info$line_fit1]
 
 #sigma bounds
-ub_props <- c(.99, .99, .99, .99, .73)
+ub_props <- c(.99, .99, .99, .99, .72)
 lb_props <- c(.15, .01, .01, .01, .01)
 
 #Run MCMC chains
