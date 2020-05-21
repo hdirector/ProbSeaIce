@@ -2,7 +2,7 @@
 #Focuses on forecast for September 2005 at 2-month lead
 
 #load MCMC results
-load("/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Results/cont_fits/fit_Month9_Train1995_2004_init7.rda")
+load("/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Results/cont_fits/cont_fit_Month9_Train1995_2004_init8.rda")
 
 #libraries
 library("coda") #for raftery.diag()
@@ -14,20 +14,21 @@ regs_to_fit <- which(sapply(res, function(x){!is.null(x)}))
 reg_names <- c("Central Arctic", "Baffin Bay", "Greenland Sea") #need to update manually!
 n_reg <- length(regs_to_fit)
 n_iter <- length(res[[1]]$kappa)
-quants_to_assess <- c(.5, .85, 1) #what quantiles to assess when there is more than on parameter value
+quants_to_assess <- c(.5, .95, 1) #what quantiles to assess when there is more than on parameter value
 eps <- .01
 
 #--------------------------
 #Assess sigma
 #--------------------------
-ub_prop <- c(.99, .99, .99, .99, .7263) #need to update manually!
+ub_prop <- c(.99, .99, .99, .99, .72) #need to update manually!
 lb_prop <- c(.15, .01, .01, .01, .01) #need to update manually!
 
 N_sigma_rd <- matrix(ncol = length(quants_to_assess) + 1, nrow = n_reg)
 M_sigma_rd <- matrix(ncol = length(quants_to_assess) + 1, nrow = n_reg)
-colnames(N_sigma_rd) <- c("Region", paste("n_", quants_to_assess, sep = ""))
-#png(filename = sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_sigma.png",
-#                       r), res = 100)
+colnames(N_sigma_rd) <- c("Region", paste("N_", quants_to_assess, sep = ""))
+colnames(M_sigma_rd) <- c("Region", paste("M_", quants_to_assess, sep = ""))
+png(filename = sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_sigma.png",
+                       r), res = 100)
 par(mfrow = c(3, 1), oma = rep(1, 4), mar = c(2, 4, 2, 2))
 for (j in 1:n_reg) {
   r <- regs_to_fit[j]
@@ -66,18 +67,19 @@ for (j in 1:n_reg) {
           xlab = "Iteration", ylab = expression(sigma),
           main = sprintf("%s", reg_names[j]))
 }
-#dev.off()
+dev.off()
 xtable(N_sigma_rd)
+xtable(M_mu_rd)
 
 
 #--------------------------
 #Assess mu
 #--------------------------
 N_mu_rd <- M_mu_rd <- matrix(ncol = length(quants_to_assess) + 1, nrow = n_reg)
-colnames(N_mu_rd) <- colnames(M_mu_rd) <- c("Region",
-                                            paste("n_", quants_to_assess, sep = ""))
-#png(filename = sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_mu.png",
-#                       r), res = 100)
+colnames(N_mu_rd) <- c("Region",paste("N_", quants_to_assess, sep = ""))
+colnames(M_mu_rd) <- c("Region",paste("M_", quants_to_assess, sep = ""))
+png(filename = sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_mu.png",
+                       r), res = 100)
 par(mfrow = c(3, 1), oma = rep(1, 4), mar = c(2, 4, 2, 2))
 for (j in 1:n_reg) {
   r <- regs_to_fit[j]
@@ -111,16 +113,18 @@ for (j in 1:n_reg) {
        xlab = "Iteration", ylab = expression(sigma),
        main = sprintf("%s", reg_names[j]))
 }
-#dev.off()
+dev.off()
 xtable(N_mu_rd)
+xtable(M_mu_rd)
 
 #--------------------------
 #Assess kappa
 #--------------------------
 N_kappa_rd <- M_kappa_rd <-  matrix(ncol = 2, nrow = n_reg)
-colnames(n_kappa_rd) <- c("Region",  "n")
-#png(sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_rho.png"),
-#    res = 100)
+colnames(N_kappa_rd) <- c("Region",  "N")
+colnames(M_kappa_rd) <- c("Region", "M")
+png(sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_kappa.png"),
+    res = 100)
 par(mfrow = c(3, 1), oma = rep(1, 4), mar = c(2, 4, 2, 2))
 for (j in 1:n_reg) {
   r <- regs_to_fit[j]
@@ -131,7 +135,9 @@ for (j in 1:n_reg) {
   plot(1:n_iter, res[[r]]$kappa, type= 'l', xlab = "Iteration",
        ylab = expression(kappa), main = sprintf("Traceplot, %s", reg_names[j]))
 }
-#dev.off()
-xtable(n_kappa_rd)
+dev.off()
+xtable(N_kappa_rd)
+xtable(M_kappa_rd)
+
 
 
