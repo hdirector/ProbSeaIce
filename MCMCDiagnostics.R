@@ -2,7 +2,7 @@
 #Focuses on forecast for September 2005 at 2-month lead
 
 #load MCMC results
-load("/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Results/cont_fits/cont_fit_Month9_Train1995_2004_init8.rda")
+load("/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Results/cont_fits/cont_fit_Task241_Month9_Year2005_Train1995_2004_Init8.rda")
 
 #libraries
 library("coda") #for raftery.diag()
@@ -69,7 +69,6 @@ for (j in 1:n_reg) {
 }
 dev.off()
 xtable(N_sigma_rd)
-xtable(M_mu_rd)
 
 
 #--------------------------
@@ -115,7 +114,6 @@ for (j in 1:n_reg) {
 }
 dev.off()
 xtable(N_mu_rd)
-xtable(M_mu_rd)
 
 #--------------------------
 #Assess kappa
@@ -137,7 +135,6 @@ for (j in 1:n_reg) {
 }
 dev.off()
 xtable(N_kappa_rd)
-xtable(M_kappa_rd)
 
 
 
