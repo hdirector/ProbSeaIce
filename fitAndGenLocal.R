@@ -2,11 +2,11 @@
 #General set up
 #-------------------------------------------------------------------------------
 rm(list = ls())
-set.seed(103)
-n_gen <- 5#100
+set.seed(104)
+n_gen <- 100
 
 #load task information
-task_id <- 1
+task_id <- 241
 task_path <-"/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/exper_design/ecmwfExper.rda"
 load(task_path)
 task <- task_table[task_id,]
@@ -29,8 +29,8 @@ train_bc_start_year <- 1993
 
 #misc fixed constants
 level <- 15
-n_iter <- 1000#55000
-burn_in <- 500#5000
+n_iter <- 55000
+burn_in <- 5000
 
 #load package
 library("IceCast")
@@ -93,12 +93,12 @@ y_train <- find_y(start_year = train_start_year, end_year = train_end_year,
 
 
 #Determine which regions to fit, and the 'full' polygon
-temp <- to_fit(y_obs = y_train_all$obs, reg_info)
+temp <- to_fit(y_obs = y_train$obs, reg_info)
 regs_to_fit <- temp$regs_to_fit
 full <- temp$full
 
 #convert lengths to proportions and transformed porportions
-prop_train <- y_to_prop(y = y_train, regs_to_fit, reg_info)
+prop_train <- y_to_prop(y = y_train$obs, regs_to_fit, reg_info)
 prop_train <- lapply(prop_train, function(y){sapply(y, function(x){x})})
 
 
@@ -123,6 +123,7 @@ for (r in regs_to_fit) {
 #sigma bounds
 ub_props <- c(.99, .99, .99, .99, .72)
 lb_props <- c(.15, .01, .01, .01, .01)
+
 
 #Run MCMC chains
 print("starting MCMC chains")

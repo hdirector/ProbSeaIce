@@ -2,8 +2,8 @@
 #General set up
 #-------------------------------------------------------------------------------
 rm(list = ls())
-set.seed(103)
-n_gen <- 2#100
+set.seed(104)
+n_gen <- 100
 
 #load task information
 args <- commandArgs(trailingOnly =TRUE)
@@ -12,8 +12,8 @@ task_path <-"/homes/direch/probForecast/ecmwfExper.rda"
 load(task_path)
 task <- task_table[task_id,]
 attach(task)
-print(sprintf("Executing fitContours taskID  %i:, month: %i, training years: %i - %i",
-              task_id, month, train_start_year, train_end_year))
+print(sprintf("Executing fitContours taskID  %i:, month: %i, year %i, training years: %i - %i, lag %i",
+              task_id, month, forecast_year, train_start_year, train_end_year, lag))
 eps <- .01
 
 #info on observations
@@ -30,8 +30,8 @@ train_bc_start_year <- 1993
 
 #misc fixed constants
 level <- 15
-n_iter <- 1000#55000
-burn_in <- 500 #5000
+n_iter <- 55000
+burn_in <- 5000
 
 #load package
 library("IceCast")
@@ -78,9 +78,8 @@ cont_bin_poly <- contour_shift(y = y_bc,
                              dat_type_pred)
 
 cont_bin <- conv_to_grid(cont_bin_poly)
-save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_bin__month%i_year%i_train%i_%i_init%i.rda",
-                               month, forecast_year, train_start_year,
-                               train_end_year, init_month))
+save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_bin_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+                              task_id,  month, forecast_year, train_start_year,  train_end_year, init_month))
 
 
 #------------------------------------------------------------------------------
@@ -97,12 +96,12 @@ y_train <- find_y(start_year = train_start_year, end_year = train_end_year,
                   dat_type_obs, dat_type_pred, obs_only = TRUE)
 
 #Determine which regions to fit, and the 'full' polygon
-temp <- to_fit(y_obs = y_train_all$obs, reg_info)
+temp <- to_fit(y_obs = y_train$obs, reg_info)
 regs_to_fit <- temp$regs_to_fit
 full <- temp$full
 
 #convert lengths to proportions and transformed porportions
-prop_train <- y_to_prop(y = y_train, regs_to_fit, reg_info)
+prop_train <- y_to_prop(y = y_train$obs, regs_to_fit, reg_info)
 prop_train <- lapply(prop_train, function(y){sapply(y, function(x){x})})
 
 #convert observations to proportions and logit of proportions
@@ -140,9 +139,10 @@ for (r in regs_to_fit)  {
   elapse_time <- end_time - start_time
   print(sprintf("MCMC for region %i finished, elapsed time %f", r, elapse_time[3]))
 }
-save(res, file = sprintf("/homes/direch/probForecast/results/cont_fits/cont_fit_Month%i_Train%i_%i.rda",
-                          month, train_start_year, train_end_year))
-
+if (forecast_year == 2005 & lag  == 1) {
+	save(res, file = sprintf("/homes/direch/probForecast/results/cont_fits/cont_fit_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+							 task_id, month, forecast_year, train_start_year, train_end_year, init_month))
+}
 #Compute mu and sigma for each region
 pars <- list()
 for (r in regs_to_fit) {
@@ -165,10 +165,10 @@ for (r in regs_to_fit) {
 }
 
 conts <- merge_conts(conts = indiv_conts, full = full)
-save(conts, file = sprintf("/homes/direch/probForecast/results/cont_conts/conts_month%i_year%i_train%i_%i_init%i.rda",
-                           month, forecast_year, train_start_year, train_end_year, init_month))
+save(conts, file = sprintf("/homes/direch/probForecast/results/cont_conts/cont_conts_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+                           task_id, month, forecast_year, train_start_year, train_end_year, init_month))
 cont_prob <- prob_map(merged = conts)
-save(cont_prob, file = sprintf("/homes/direch/probForecast/results/cont_prob/prob_month%i_year%i_train%i_%i_init%i.rda",
-                            month, forecast_year, train_start_year, train_end_year, init_month))
+save(cont_prob, file = sprintf("/homes/direch/probForecast/results/cont_prob/cont_prob_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+                                task_id, month, forecast_year, train_start_year, train_end_year, init_month))
 print("completed cont_prob")
 
