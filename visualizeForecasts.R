@@ -63,9 +63,11 @@ dyn_prob[is.na(dyn_prob)] <- 101/100
 dyn_prob[non_reg_ocean == 1] <- 102/100
 
 #read in contour probabilistic
-load(sprintf("Results/cont_prob/ecmwfsipn/prob_month%i_year%i_train%i_%i_init%i.rda",
-             month, year, train_start_year, train_end_year, init_month))
-cont_prob <- prob #UPDATE ME
+f <- Sys.glob(file.path('Results/cont_prob', 
+                        sprintf("cont_prob_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
+                                month, year, train_start_year, train_end_year, init_month)))
+load(f)
+
 cont_prob[NA_in_dyn] <- NA
 cont_prob[is.na(cont_prob)] <- 101/100
 cont_prob[non_reg_ocean == 1] <- 102/100
@@ -94,10 +96,20 @@ cwid = 8
 main_size = 1.6
 pdf("Paper/Figures/visSep.pdf", height = 7, width = 7)
 par(oma = c(.1, 1, 3, 2.5), mar = c(.1, 1, 1.5, 0))
-layout(matrix(nrow = 15, ncol = 2*cwid + 1, byrow = TRUE,
-              data = c(rep(c(rep(1:2, each = cwid), 6), 7),
-                       rep(c(rep(3:4, each = cwid), 6), 7),
-                       rep(5, 51))))
+layout(matrix(nrow = 13, ncol = 2*cwid + 1, byrow = TRUE,
+              data = c(rep(1:2, each = cwid), 6, 
+                       rep(1:2, each = cwid), 6,
+                       rep(1:2, each = cwid), 6,
+                       rep(1:2, each = cwid), 6,
+                       rep(1:2, each = cwid), 6,
+                       rep(1:2, each = cwid), 6,
+                       rep(3:4, each = cwid), 6,
+                       rep(3:4, each = cwid), 6,
+                       rep(3:4, each = cwid), 6,
+                       rep(3:4, each = cwid), 6,
+                       rep(3:4, each = cwid), 6,
+                       rep(3:4, each = cwid), 6,
+                       rep(5, 2*cwid + 1))))
 xBdInd <- 60:215; xBdN <- length(xBdInd) 
 yBdInd <- 130:310; yBdN <- length(yBdInd)
 image(xBd[xBdInd], yBd[yBdInd], dyn_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 1)]], 
@@ -107,7 +119,7 @@ image(xBd[xBdInd], yBd[yBdInd], dyn_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 
 plot(obs_poly, add = T, border = con_color, lwd = con_lwd)
 image(xBd[xBdInd], yBd[yBdInd], cont_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 1)]],
       xaxt = "n",   yaxt = "n", col = c(rep(viridis(10), each = 10), "grey", "beige"),
-      zlim = c(0, 102/100), xlab = "", ylab = "", main = "Contour Model",
+      zlim = c(0, 102/100), xlab = "", ylab = "", main = "Contour",
       cex.main = main_size)
 plot(obs_poly, add = T, border = con_color, lwd = con_lwd)
 image(xBd[xBdInd], yBd[yBdInd], clim_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 1)]], 
@@ -121,7 +133,7 @@ image(xBd[xBdInd], yBd[yBdInd], mcf_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 
       cex.main = main_size)
 plot(obs_poly, add = T, border = con_color, lwd = con_lwd)
 plot.new()
-legend(.15, 1, fill = c("grey", "beige", NA), 
+legend(.1, 1, fill = c("grey", "beige", NA), 
        legend = c("land", "Outside Region", "Observed Contour"),
        lty = c(NA, NA, 1), pch = c(22, 22, NA), ncol = 3, cex = 1,
        col = c("white", "white", "red"), lwd = c(NA, NA, 2),
