@@ -83,7 +83,8 @@ for (y in (n_wght_years + 1):n_years) {
         init_month <- get_init_month(months[m], lags[l])
         f <- Sys.glob(file.path('Results/cont_prob', 
                       sprintf("cont_prob_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
-                      months[m], wght_years[k], train_start_year, train_end_year, init_month)))
+                      months[m], wght_years[k], train_start_year, train_end_year, 
+                      init_month)))
         load(f)
         cont_prob[NA_in_dyn] <- NA
         cont_prob[non_reg_ocean == 1] <- NA
@@ -128,14 +129,16 @@ for (y in (n_wght_years + 1):n_years) {
       load(sprintf("Results/clim_prob/clim_prob_month%i_year%i.rda", months[m], 
                    years[y]))
       clim_prob[NA_in_dyn] <- NA
-      clim_prob[non_reg_ocean == 1] <- 0
+      clim_prob[non_reg_ocean == 1] <- NA
 
       #cont model probabilistic ("cont_prob")
-      load(sprintf("Results/cont_prob/ecmwfsipn/prob_month%i_year%i_train%i_%i_init%i.rda",
-                   months[m], years[y], train_start_year, train_end_year, init_month))
-      cont_prob <- prob
+      f <- Sys.glob(file.path('Results/cont_prob', 
+                              sprintf("cont_prob_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
+                                      months[m], years[y], train_start_year,
+                                      train_end_year, init_month)))
+      load(f)
       cont_prob[NA_in_dyn] <- NA
-      cont_prob[non_reg_ocean == 1] <- 0
+      cont_prob[non_reg_ocean == 1] <- NA
       mcf_prob <- wght_mod(weights[y - n_wght_years, m, l], cont_prob,
                             clim_prob)
       save(mcf_prob, file = sprintf("Results/mcf_prob/mcf_prob_month%i_year%i_train%i_%i_init%i.rda",
