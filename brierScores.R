@@ -245,7 +245,7 @@ five_colors <- six_colors[c(1:4, 6)]
 
 #formal names of forecasts
 prob_formal <- c("Climatology", "Ensemble", "Contour",
-                 "Mixture Contour Forecast","Trend Adjusted Quantile Mapping", 
+                 "Mixture Contour Forecast","Trend Adjusted Quantile Mapping",
                  "Damped Persistence")
 bin_formal <- c("Climatology", "Ensemble", "Contour-Shifted",
                 "Mixture Contour Forecast", "Damped Persistence")
@@ -254,7 +254,7 @@ bin_formal <- c("Climatology", "Ensemble", "Contour-Shifted",
 #Prob. Brier score for months ASO, results section
 #--------------------------------------------------
 brier_prob_month <- brier_sum %>%
-  filter(mod_type == "prob"|mod == "dPersis") %>%
+  filter(mod_type == "prob") %>%
   filter(month == "Aug"| month == "Sep"| month == "Oct") %>%
   group_by(lag, mod, month, mod_type) %>%
   dplyr::summarize(mean = mean(mean))
@@ -268,12 +268,12 @@ p_brier_prob_ASO <- ggplot(data = brier_prob_month,
   ylim(0, .095) + 
   theme(legend.position="bottom", plot.title = element_text(hjust = 0.5)) +
   scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
-                                "mcf_prob", "taqm", "dPersis"),
-                     values = six_colors,
-                     labels = prob_formal) +
-  scale_linetype_manual(breaks = c("prob", "bin"),
-                        values = c("solid", "dashed"),
-                        labels = c("Probabilistic", "Binary")) +
+                                "mcf_prob", "taqm"),
+                     values = six_colors[1:5],
+                     labels = prob_formal[1:5]) +
+  scale_linetype_manual(breaks = c("prob"),
+                        values = c("solid"),
+                        labels = c("Probabilistic")) +
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic  Forecast Performance,
           2008-2016")
