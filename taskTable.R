@@ -1,7 +1,7 @@
 n_train <- 10
 forecast_years <- 2005:2016
 n_years <- length(forecast_years)
-lag <- 0:4
+lag <- 0:6
 n_lags <- length(lag)
 months <- 1:12
 n_months <- length(months)
