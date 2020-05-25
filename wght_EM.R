@@ -6,7 +6,7 @@ n_wght_years <- 3
 years <- 2005:2016
 n_years <- length(years)
 nX <- 304; nY <- 448
-months <- 1:12; lags <- 1:2
+months <- 1:12; lags <- 0:6
 n_months <- length(months); n_lags <- length(lags)
 stat_train <- 10
 sip_filepath <- "Data/ecmwfsipn/forecast/ecmwfsipn_sip"
@@ -81,10 +81,10 @@ for (y in (n_wght_years + 1):n_years) {
 
         #contour model ("cont_prob")
         init_month <- get_init_month(months[m], lags[l])
-        load(sprintf("Results/cont_prob/ecmwfsipn/prob_month%i_year%i_train%i_%i_init%i.rda",
-                     months[m], wght_years[k], train_start_year, train_end_year, init_month))
-        cont_prob <- prob #UPDATE ME
-        rm(prob)
+        f <- Sys.glob(file.path('Results/cont_prob', 
+                      sprintf("cont_prob_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
+                      months[m], wght_years[k], train_start_year, train_end_year, init_month)))
+        load(f)
         cont_prob[NA_in_dyn] <- NA
         cont_prob[non_reg_ocean == 1] <- NA
         conts[k,,] <- cont_prob
