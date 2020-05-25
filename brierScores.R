@@ -12,11 +12,11 @@
 
 
 #set up
-library("IceCastV2")
+library("IceCast")
 library('RcppCNPy')
 months <- 1:12
 years <- 2008:2016
-lags <- 1:2
+lags <- 0:6
 nX <- 304; nY <- 448
 stat_train <- 10
 sip_filepath <- "/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Data/ecmwfsipn/forecast/ecmwfsipn_sip"
@@ -26,16 +26,6 @@ sip_start_year <- 1993
 all_regions_mask <- conv_to_grid(all_regions)
 non_reg_ocean <- matrix(nrow = nX, ncol = nY, data = 0)
 non_reg_ocean[all_regions_mask == 0] <- 1
-
-#region map for analysis
-reg_cat <- matrix(nrow = nX, ncol = nY, data = 0)
-reg_cat[land_mat == 1] <- NA
-for (i in 1:5) {
-  temp <- conv_to_grid(reg_info$regions[[i]])
-  curr <- which(temp == 1)
-  stopifnot(all(reg_cat[curr] == 0)) #confirm no overlappping pixels
-  reg_cat[curr] <- i
-}
 
 #' Function to compute Brier Score
 #' @param predField matrix of predicted values (either binary or probabilities)
@@ -101,112 +91,116 @@ tot_area <- sum(grid_area, na.rm = T)
 prop_area <- grid_area/tot_area
 stopifnot(sum(prop_area, na.rm = T) == 1)
 
-#Compute brier scores for all cases and forecast types
-for (y in 1:n_years) {
-  for (m in 1:n_months) {
-    #observation for comparison
-    obs_temp <- obs[length(years[1]:years[y]), months[m],,]
-    obs_temp[obs_temp == 120] <- NA #land index
-    obs_temp[obs_temp == 110] <- 100 #satellite hole is assumed to be ice
-    obs_curr <- matrix(nrow = nX, ncol = nY)
-    obs_curr[obs_temp >= .15] <- 1
-    obs_curr[obs_temp < .15] <- 0
-    obs_curr[land_mat == 1] <- NA
-    obs_curr[NA_in_dyn] <- NA
-
-    #identify years where training begins for stat model
-    train_start_year <- years[y] - stat_train
-    train_end_year <- years[y] - 1
-
-    ###compute brier scores for forecasts where the lag does not matter
-    inds <- which(brier$year == years[y] & brier$month == months[m])
-    stopifnot(length(inds) == n_lags)
-
-    #climatology binary ("clim_bin")
-    load(sprintf("Results/clim_bin/clim_bin_month%i_year%i.rda", months[m], years[y]))
-    clim_bin[NA_in_dyn] <- NA
-    brier[inds,]$clim_bin <- field_brier(pred_field = clim_bin, obs_field = obs_curr,
-                                         prop_area)
-
-    #climatology probabilistic ("clim_prob")
-    load(sprintf("Results/clim_prob/clim_prob_month%i_year%i.rda", months[m], years[y]))
-    clim_prob[NA_in_dyn] <- NA
-    brier[inds,]$clim_prob <- field_brier(pred_field = clim_prob, obs_field = obs_curr,
-                                          prop_area)
-
-    #compute brier scores for forecasts where the lag matters
-    for (j in 1:n_lags) {
-      init_month <- get_init_month(months[m], lags[j])
-      ind <- which(brier$year == years[y] & brier$month == months[m]
-                   & brier$lag == lags[j])
-      stopifnot(length(ind) == 1)
-
-      #damped persistence ("dPersis")
-      load(sprintf("Results/dPersis/dPersis_month%i_year%i_lag%i.rda", months[m], years[y],
-                   lags[j]))
-      dPersis[NA_in_dyn] <- NA
-      brier[ind,]$dPersis <- field_brier(pred_field = dPersis, obs_field = obs_curr,
-                                          prop_area)
-      rm(dPersis)
-
-      #ensemble probabilistic forecast ("dyn_prob")
-      load(sprintf("%s/initMonth%i.rda", sip_filepath, init_month))
-      dyn_prob <- sip[length(sip_start_year:years[y]), months[m],,]
-      brier[ind,]$dyn_prob <- field_brier(pred_field = dyn_prob, obs_field = obs_curr,
-                                          prop_area)
-
-      #ensemble binary forecast ("dyn_bin")
-      dyn_bin <- matrix(nrow = nX, ncol = nY, data = 0)
-      dyn_bin[land_mat == 1] <- NA
-      dyn_bin[NA_in_dyn] <- NA
-      dyn_bin[dyn_prob >= 0.5] <- 1
-      brier[ind,]$dyn_bin <- field_brier(pred_field = dyn_bin, obs_field = obs_curr,
-                                         prop_area)
-
-      #trend adjusted quantile mapping ("TAQM")
-      taqm <- npyLoad(sprintf("Results/taqm/taqm_month%i_year%i_init%i.npy", months[m],
-                              years[y], init_month))
-      brier[ind,]$taqm <- field_brier(pred_field = taqm, obs_field = obs_curr,
-                                      prop_area)
-      rm(taqm)
-
-      #post-processed ensemble binary ("cont_bin")
-      load(sprintf("Results/cont_bin/ecmwfsipn/bc_bin_month%i_year%i_train%i_%i_init%i.rda",
-                    months[m], years[y], train_start_year, train_end_year, init_month))
-      cont_bin <- bc_bin
-      cont_bin[NA_in_dyn] <- NA
-      brier[ind,]$cont_bin <- field_brier(pred_field = cont_bin,
-                                            obs_field = obs_curr, prop_area)
-      rm(cont_bin)
-
-      #contour probabilistic ("cont_prob")
-      load(sprintf("Results/cont_prob/ecmwfsipn/prob_month%i_year%i_train%i_%i_init%i.rda",
-                    months[m], years[y], train_start_year, train_end_year, init_month))
-      cont_prob <- prob #UPDATE ME
-      cont_prob[NA_in_dyn] <- NA
-      brier[ind,]$cont_prob <- field_brier(pred_field = cont_prob,
-                                             obs_field = obs_curr, prop_area)
-      rm(cont_prob); rm(dyn_prob); rm(dyn_bin)
-
-      #mixture contour forecast probabilistic ("mcf_prob")
-      load(sprintf("Results/mcf_prob/mcf_prob_month%i_year%i_train%i_%i_init%i.rda",
-                   months[m], years[y], train_start_year, train_end_year, init_month))
-      brier[ind,]$mcf_prob <- field_brier(pred_field = mcf_prob,
-                                           obs_field = obs_curr, prop_area)
-      rm(mcf_prob)
-
-      #mixture contour forecast binary ("mcf_bin")
-      load(sprintf("Results/mcf_bin/mcf_bin_month%i_year%i_train%i_%i_init%i.rda",
-                   months[m], years[y], train_start_year, train_end_year, init_month))
-      brier[ind,]$mcf_bin <- field_brier(pred_field = mcf_bin,
-                                          obs_field = obs_curr, prop_area)
-      rm(mcf_bin)
-    }
-    print(c(m, y))
-
-  }
-}
-#save(brier, file = "Results/summaries/brier.rda")
+# #Compute brier scores for all cases and forecast types
+# for (y in 1:n_years) {
+#   for (m in 1:n_months) {
+#     #observation for comparison
+#     obs_temp <- obs[length(years[1]:years[y]), months[m],,]
+#     obs_temp[obs_temp == 120] <- NA #land index
+#     obs_temp[obs_temp == 110] <- 100 #satellite hole is assumed to be ice
+#     obs_curr <- matrix(nrow = nX, ncol = nY)
+#     obs_curr[obs_temp >= .15] <- 1
+#     obs_curr[obs_temp < .15] <- 0
+#     obs_curr[land_mat == 1] <- NA
+#     obs_curr[NA_in_dyn] <- NA
+# 
+#     #identify years where training begins for stat model
+#     train_start_year <- years[y] - stat_train
+#     train_end_year <- years[y] - 1
+# 
+#     ###compute brier scores for forecasts where the lag does not matter
+#     inds <- which(brier$year == years[y] & brier$month == months[m])
+#     stopifnot(length(inds) == n_lags)
+# 
+#     #climatology binary ("clim_bin")
+#     load(sprintf("Results/clim_bin/clim_bin_month%i_year%i.rda", months[m], years[y]))
+#     clim_bin[NA_in_dyn] <- NA
+#     brier[inds,]$clim_bin <- field_brier(pred_field = clim_bin, obs_field = obs_curr,
+#                                          prop_area)
+# 
+#     #climatology probabilistic ("clim_prob")
+#     load(sprintf("Results/clim_prob/clim_prob_month%i_year%i.rda", months[m], years[y]))
+#     clim_prob[NA_in_dyn] <- NA
+#     brier[inds,]$clim_prob <- field_brier(pred_field = clim_prob, obs_field = obs_curr,
+#                                           prop_area)
+# 
+#     #compute brier scores for forecasts where the lag matters
+#     for (j in 1:n_lags) {
+#       init_month <- get_init_month(months[m], lags[j])
+#       ind <- which(brier$year == years[y] & brier$month == months[m]
+#                    & brier$lag == lags[j])
+#       stopifnot(length(ind) == 1)
+# 
+#       #damped persistence ("dPersis")
+#       load(sprintf("Results/dPersis/dPersis_month%i_year%i_lag%i.rda", months[m], years[y],
+#                    lags[j]))
+#       dPersis[NA_in_dyn] <- NA
+#       brier[ind,]$dPersis <- field_brier(pred_field = dPersis, obs_field = obs_curr,
+#                                           prop_area)
+#       rm(dPersis)
+# 
+#       #ensemble probabilistic forecast ("dyn_prob")
+#       load(sprintf("%s/initMonth%i.rda", sip_filepath, init_month))
+#       dyn_prob <- sip[length(sip_start_year:years[y]), months[m],,]
+#       brier[ind,]$dyn_prob <- field_brier(pred_field = dyn_prob, obs_field = obs_curr,
+#                                           prop_area)
+# 
+#       #ensemble binary forecast ("dyn_bin")
+#       dyn_bin <- matrix(nrow = nX, ncol = nY, data = 0)
+#       dyn_bin[land_mat == 1] <- NA
+#       dyn_bin[NA_in_dyn] <- NA
+#       dyn_bin[dyn_prob >= 0.5] <- 1
+#       brier[ind,]$dyn_bin <- field_brier(pred_field = dyn_bin, obs_field = obs_curr,
+#                                          prop_area)
+# 
+#       #trend adjusted quantile mapping ("TAQM")
+#       taqm <- npyLoad(sprintf("Results/taqm/taqm_month%i_year%i_init%i.npy", months[m],
+#                               years[y], init_month))
+#       brier[ind,]$taqm <- field_brier(pred_field = taqm, obs_field = obs_curr,
+#                                       prop_area)
+#       rm(taqm)
+# 
+#       #post-processed ensemble binary ("cont_bin")
+#       f <- Sys.glob(file.path('Results/cont_bin', 
+#                               sprintf("cont_bin_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
+#                                       months[m], years[y], train_start_year, 
+#                                       train_end_year, init_month)))
+#       load(f)
+#       cont_bin[NA_in_dyn] <- NA
+#       brier[ind,]$cont_bin <- field_brier(pred_field = cont_bin,
+#                                             obs_field = obs_curr, prop_area)
+#       rm(cont_bin)
+# 
+#       #contour probabilistic ("cont_prob")
+#       f <- Sys.glob(file.path('Results/cont_prob', 
+#                               sprintf("cont_prob_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
+#                                       months[m], years[y], train_start_year,
+#                                       train_end_year, init_month)))
+#       load(f)
+#       cont_prob[NA_in_dyn] <- NA
+#       brier[ind,]$cont_prob <- field_brier(pred_field = cont_prob,
+#                                              obs_field = obs_curr, prop_area)
+#       rm(cont_prob); rm(dyn_prob); rm(dyn_bin)
+# 
+#       #mixture contour forecast probabilistic ("mcf_prob")
+#       load(sprintf("Results/mcf_prob/mcf_prob_month%i_year%i_train%i_%i_init%i.rda",
+#                    months[m], years[y], train_start_year, train_end_year, init_month))
+#       brier[ind,]$mcf_prob <- field_brier(pred_field = mcf_prob,
+#                                            obs_field = obs_curr, prop_area)
+#       rm(mcf_prob)
+# 
+#       #mixture contour forecast binary ("mcf_bin")
+#       load(sprintf("Results/mcf_bin/mcf_bin_month%i_year%i_train%i_%i_init%i.rda",
+#                    months[m], years[y], train_start_year, train_end_year, init_month))
+#       brier[ind,]$mcf_bin <- field_brier(pred_field = mcf_bin,
+#                                           obs_field = obs_curr, prop_area)
+#       rm(mcf_bin)
+#     }
+#     print(c(m, y))
+# 
+#   }
+# }
+# save(brier, file = "Results/summaries/brier.rda")
 #load("Results/summaries/brier.rda")
 
 
@@ -246,13 +240,14 @@ gg_color_hue <- function(n) {
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
 six_colors <- gg_color_hue(6)
+six_colors <- six_colors[c(2:4, 6, 5, 1)] #order colors
 five_colors <- six_colors[c(1:4, 6)]
 
 #formal names of forecasts
-prob_formal <- c("Climatology", "Ensemble", "Post-Processed Ensemble",
+prob_formal <- c("Climatology", "Ensemble", "Contour",
                  "Mixture Contour Forecast","Trend Adjusted Quantile Mapping", 
                  "Damped Persistence")
-bin_formal <- c("Climatology", "Ensemble", "Post-Processed Ensemble",
+bin_formal <- c("Climatology", "Ensemble", "Contour-Shifted",
                 "Mixture Contour Forecast", "Damped Persistence")
 
 #--------------------------------------------------
@@ -277,7 +272,7 @@ p_brier_prob_ASO <- ggplot(data = brier_prob_month,
                      values = six_colors,
                      labels = prob_formal) +
   scale_linetype_manual(breaks = c("prob", "bin"),
-                        values = c("dashed", "solid"),
+                        values = c("solid", "dashed"),
                         labels = c("Probabilistic", "Binary")) +
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic  Forecast Performance,
@@ -307,7 +302,7 @@ p_brier_prob_seas <- ggplot(data = brier_prob_seas,
                        values = six_colors,
                        labels = prob_formal) +
   scale_linetype_manual(breaks = c("prob", "bin"),
-                        values = c("dashed", "solid"),
+                        values = c("solid", "dashed"),
                         labels = c("Probabilistic", "Binary")) +
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic  Forecast Performance,
@@ -331,7 +326,7 @@ p_brier_bin_ASO <- ggplot(data = brier_bin_ASO,
   geom_line() +
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
-  ylim(0, .095) +
+  ylim(0, .103) +
   theme(legend.position ="bottom", plot.title = element_text(hjust = 0.5)) +
   scale_color_manual(breaks = c("clim_bin", "dyn_bin", "cont_bin",
                                 "mcf_bin", "dPersis"),
@@ -341,7 +336,7 @@ p_brier_bin_ASO <- ggplot(data = brier_bin_ASO,
 
 #pdf("Paper/Figures/brier_bin_ASO.pdf", width = 10, height = 5)
 p_brier_bin_ASO + facet_grid(cols = vars(month)) 
-#dev.off()
+ #dev.off()
 
 
 #------------------------------------------------
@@ -392,7 +387,7 @@ p_brier_all <- ggplot(data = brier_all,
                      values = six_colors,
                      labels = prob_formal)  +
   scale_linetype_manual(breaks = c("prob", "bin"),
-                        values = c("dashed", "solid"),
+                        values = c("solid", "dashed"),
                         labels = c("Probabilistic", "Binary")) +
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic Forecasts")
