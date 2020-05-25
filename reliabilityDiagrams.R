@@ -172,7 +172,8 @@ c2_n <- which(colnames(n_pred) == "0.99")
 # calib <- list("n_pred" = n_pred, "prop_obs" = prop_obs)
 # save(calib,file = "Results/summaries/calib.rda")
 load("Results/summaries/calib.rda")
-attach(calib)
+prop_obs <- calib$prop_obs
+n_pred <- calib$n_pred
 
 library("tidyverse")
 
@@ -244,13 +245,13 @@ p_g2 <- ggplot(filter(calib_sum, lag_l2 == ">= 2 month lag"),
                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
   theme(strip.text = element_text(colour = 'navy', face = "bold"))
 
-#pdf("Paper/Figures/calib_l2.pdf", width = 8.5, height = 8.5)
+pdf("Paper/Figures/calib_l2.pdf", width = 8.5, height = 8.5)
 p_l2 + facet_grid(rows = vars(mod), cols = vars(season), switch = "y")
-#dev.off()
+dev.off()
 
-#pdf("Paper/Figures/calib_g2.pdf", width = 8.5, height = 8.5)
+pdf("Paper/Figures/calib_g2.pdf", width = 8.5, height = 8.5)
 p_g2 + facet_grid(rows = vars(mod), cols = vars(season), switch = "y")
-#dev.off()
+dev.off()
 
 
 #------------------------------------------------------------
@@ -273,9 +274,9 @@ p_ASO <- ggplot(filter(calib_ASO),
                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
   theme(strip.text = element_text(colour = 'navy', face = "bold"))
 
-#pdf("Paper/Figures/calib_ASO.pdf", width = 7, height = 4)
+pdf("Paper/Figures/calib_ASO.pdf", width = 7, height = 4)
 p_ASO + facet_grid(cols = vars(mod), rows= vars(lag_l2), switch = "y")
-#dev.off()
+dev.off()
 
 
 #----------------------------------------------------------
@@ -295,9 +296,9 @@ p_sep <- ggplot(filter(calib_sep),
                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
   theme(strip.text = element_text(colour = 'navy', face = "bold")) + 
   theme(legend.position = "none")
-#pdf("Paper/Figures/calib_sep.pdf", height = 3, width = 5)
+pdf("Paper/Figures/calib_sep.pdf", height = 3, width = 5)
 p_sep + facet_grid(cols = vars(mod), switch = "y")
-#dev.off()
+dev.off()
 
 ##################################
 #number of point counts

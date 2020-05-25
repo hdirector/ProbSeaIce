@@ -201,7 +201,7 @@ stopifnot(sum(prop_area, na.rm = T) == 1)
 #   }
 # }
 # save(brier, file = "Results/summaries/brier.rda")
-#load("Results/summaries/brier.rda")
+load("Results/summaries/brier.rda")
 
 
 ####Brier Score by  month, lag, model
@@ -278,9 +278,9 @@ p_brier_prob_ASO <- ggplot(data = brier_prob_month,
   ggtitle("Probabilistic  Forecast Performance,
           2008-2016")
 
-#pdf("Paper/Figures/brier_prob_ASO.pdf", width = 10, height = 5)
+pdf("Paper/Figures/brier_prob_ASO.pdf", width = 10, height = 5)
 p_brier_prob_ASO + facet_grid(cols = vars(month))
-#dev.off()
+dev.off()
 
 #------------------------------------------------
 #Prob. Brier score by season, supplement
@@ -308,9 +308,9 @@ p_brier_prob_seas <- ggplot(data = brier_prob_seas,
   ggtitle("Probabilistic  Forecast Performance,
           2008-2016")
 
-#pdf("Paper/Figures/brier_prob_seas.pdf", width = 10, height = 5)
+pdf("Paper/Figures/brier_prob_seas.pdf", width = 10, height = 5)
 p_brier_prob_seas + facet_grid(cols = vars(season))
-#dev.off()
+dev.off()
 
 #------------------------------------------------
 #Binary Brier score by month ASO, results section
@@ -334,9 +334,9 @@ p_brier_bin_ASO <- ggplot(data = brier_bin_ASO,
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Binary Forecast Performance, 2008-2016")
 
-#pdf("Paper/Figures/brier_bin_ASO.pdf", width = 10, height = 5)
+pdf("Paper/Figures/brier_bin_ASO.pdf", width = 10, height = 5)
 p_brier_bin_ASO + facet_grid(cols = vars(month)) 
- #dev.off()
+dev.off()
 
 
 #------------------------------------------------
@@ -360,9 +360,9 @@ p_brier_bin_seas <- ggplot(data = brier_bin_seas,
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Binary Forecast Performance, 2008-2016")
 
-#pdf("Paper/Figures/brier_bin_seas.pdf", width = 10, height = 5)
+pdf("Paper/Figures/brier_bin_seas.pdf", width = 10, height = 5)
 p_brier_bin_seas + facet_grid(cols = vars(season)) 
-#dev.off()
+dev.off()
 
 #-------------------------------
 #Overall performance, supplement
@@ -392,6 +392,6 @@ p_brier_all <- ggplot(data = brier_all,
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic Forecasts")
 
-#pdf("Paper/Figures/overall_brier.pdf", width = 8, height = 5)
+pdf("Paper/Figures/overall_brier.pdf", width = 8, height = 5)
 p_brier_all
-#dev.off()
+dev.off()
