@@ -97,18 +97,8 @@ main_size = 1.6
 pdf("Paper/Figures/visSep.pdf", height = 7, width = 7)
 par(oma = c(.1, 1, 3, 2.5), mar = c(.1, 1, 1.5, 0))
 layout(matrix(nrow = 13, ncol = 2*cwid + 1, byrow = TRUE,
-              data = c(rep(1:2, each = cwid), 6, 
-                       rep(1:2, each = cwid), 6,
-                       rep(1:2, each = cwid), 6,
-                       rep(1:2, each = cwid), 6,
-                       rep(1:2, each = cwid), 6,
-                       rep(1:2, each = cwid), 6,
-                       rep(3:4, each = cwid), 6,
-                       rep(3:4, each = cwid), 6,
-                       rep(3:4, each = cwid), 6,
-                       rep(3:4, each = cwid), 6,
-                       rep(3:4, each = cwid), 6,
-                       rep(3:4, each = cwid), 6,
+              data = c(rep(c(rep(1:2, each = cwid), 6), 6),
+                       rep(c(rep(3:4, each = cwid), 6), 6),
                        rep(5, 2*cwid + 1))))
 xBdInd <- 60:215; xBdN <- length(xBdInd) 
 yBdInd <- 130:310; yBdN <- length(yBdInd)
