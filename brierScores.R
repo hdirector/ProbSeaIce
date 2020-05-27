@@ -244,10 +244,10 @@ six_colors <- six_colors[c(2:4, 6, 5, 1)] #order colors
 five_colors <- six_colors[c(1:4, 6)]
 
 #formal names of forecasts
-prob_formal <- c("Climatology", "Ensemble", "Contour",
+prob_formal <- c("Climatology", "Ensemble", "Contour Model",
                  "Mixture Contour Forecast","Trend Adjusted Quantile Mapping",
                  "Damped Persistence")
-bin_formal <- c("Climatology", "Ensemble", "Contour-Shifted",
+bin_formal <- c("Climatology", "Ensemble", "Contour-Shifted Ensemble",
                 "Mixture Contour Forecast", "Damped Persistence")
 
 #--------------------------------------------------
@@ -265,8 +265,9 @@ p_brier_prob_ASO <- ggplot(data = brier_prob_month,
   geom_line(aes(linetype=mod_type), show.legend = FALSE)+ 
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
-  ylim(0, .095) + 
-  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5)) +
+  ylim(0, .083) + 
+  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 12)) +
   scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
                                 "mcf_prob", "taqm"),
                      values = six_colors[1:5],
@@ -296,7 +297,8 @@ p_brier_prob_seas <- ggplot(data = brier_prob_seas,
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
   ylim(0, .095) + 
-  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 12)) +
   scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
                                 "mcf_prob", "taqm", "dPersis"),
                        values = six_colors,
@@ -327,7 +329,8 @@ p_brier_bin_ASO <- ggplot(data = brier_bin_ASO,
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
   ylim(0, .103) +
-  theme(legend.position ="bottom", plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position ="bottom", plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 12)) +
   scale_color_manual(breaks = c("clim_bin", "dyn_bin", "cont_bin",
                                 "mcf_bin", "dPersis"),
                      values = five_colors, labels = bin_formal) +
@@ -353,7 +356,8 @@ p_brier_bin_seas <- ggplot(data = brier_bin_seas,
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
   ylim(0, .095) +
-  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 12)) +
   scale_color_manual(breaks = c("clim_bin", "dyn_bin", 
                                 "cont_bin", "mcf_bin", "dPersis"),
                      values = five_colors, labels = bin_formal) +
@@ -381,7 +385,8 @@ p_brier_all <- ggplot(data = brier_all,
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
   ylim(0, .065) + 
-  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 12)) +
   scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
                                 "mcf_prob", "taqm", "dPersis"),
                      values = six_colors,
