@@ -30,18 +30,19 @@ bb <- SpatialPolygons(list(Polygons(list(Polygon(bbPts)), "box")))
 
 #make map
 nReg <- length(reg_info$regions)
-plot(bb, col = 'beige')
+plot(bb, col = 'beige', border = 'white')
 for (i in 1:nReg) {
   plot(reg_info$regions[[i]], add = T, col = regCols[i], border = regCols[i])
 }
 plot(non_reg, col = "white", add = T, border = "white")
 plot(land, add = T, col = 'grey', border = 'grey')
-plot(bb, border = 'white', add = T)
 plot(reg_info$start_lines[[1]], add = T, col = lineCols[1],
      lwd = 2)
 for (i in 2:nReg) {
-  points(reg_info$start_lines_coords[[i]], type= 'l', col = lineCols[i])
+  plot(reg_info$start_lines[[i]], add = T, col = lineCols[i])
 }
+plot(bb, border = "black", lwd = 2, add = T)
+
 
 text(1000, 2800, "Russia", font = 2, cex = .65, col= 'navy')
 text(-2700, 1000, "Alaska", font = 2, cex = .65, col= 'navy')
