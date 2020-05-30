@@ -38,8 +38,18 @@ plot(non_reg, col = "white", add = T, border = "white")
 plot(land, add = T, col = 'grey', border = 'grey')
 plot(reg_info$start_lines[[1]], add = T, col = lineCols[1],
      lwd = 2)
-for (i in 2:nReg) {
-  plot(reg_info$start_lines[[i]], add = T, col = lineCols[i])
+
+
+for (r in 2:nReg) {
+  #find the line section between the first and last start coord
+  #in start_line_coords
+  a1 <- which.min(apply(reg_info$start_lines_coords[[r]], 1,
+                        function(x){get_dist(x,reg_info$start_coords[[r]][1,])}))
+  n_lines_r <- nrow(reg_info$start_coords[[r]])
+  a2 <- which.min(apply(reg_info$start_lines_coords[[r]], 1,
+                        function(x){get_dist(x,reg_info$start_coords[[r]][n_lines_r,])}))
+  points(reg_info$start_lines_coords[[r]][a1:a2,], col = lineCols[[r]], type= 'l')
+  points(reg_info$start_coords[[r]], pch = 20, cex = .3, col = lineCols[[r]])
 }
 plot(bb, border = "black", lwd = 2, add = T)
 

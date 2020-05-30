@@ -33,12 +33,11 @@ plot(rm_holes(newReg), col = 'lightblue', add = T, lwd = 2, border = "blue")
 for (i in 1:length(reg_info$lines[[2]])) {
   plot(reg_info$lines[[2]][[i]], add = T, col = "mediumpurple1", lwd = 2)
 }
+plot(bbBer, add = T)
 points(reg_info$start_coords[[2]], col = 'purple4', pch = 20, cex = 1.5, 
        lwd = 2)
 points(rbind(reg_info$start_coords[[2]][14,], ep[14,]), type = "l",
        col = "darkgreen", lwd = 2)
-plot(bbBer, add = T)
-plot(gIntersection(bbBer, land), add = T, col = "grey")
 
 
 legend(-3500, 3800, ncol = 2, cex = 1.4, bg = "white", text.font = 2,
@@ -71,18 +70,19 @@ mtext("Central Arctic Region", side = 3)
 plot(gIntersection(bbCA, land), add = T, col = "grey", border = "grey")
 plot(reg_info$regions[[1]], add = T, lwd = 1, col = 'white', border = "white")
 
-plot(gIntersection(land, bbCA), add = T,border = "grey")
+plot(gIntersection(land, bbCA), add = T, col  = "grey", border = "grey")
 plot(rm_holes(newReg), border = "blue", add = T, lwd = 2, col = 'lightblue')
 for (i in 1:length(reg_info$lines[[1]])) {
   plot(reg_info$lines[[1]][[i]], add = T, col = "mediumpurple")
 }
-points(rbind(reg_info$start_coords[[1]][57,], ep[57,]), type = "l",
+points(rbind(reg_info$start_coords[[1]][33,], ep[33,]), type = "l",
        col = "darkgreen", lwd = 2)
 points(reg_info$start_coords[[1]], col = 'purple4', pch = 3, cex = 2, lwd = 2)
-plot(gIntersection(land, bbCA), add = T, col = 'grey')
+plot(keep_poly(gIntersection(land, rm_holes(newReg))), add = T, col = 'grey', border = 'grey')
+plot(rm_holes(newReg), border = "blue", add = T, lwd = 2)
 plot(bbCA, border = 'black', add = T)
 legend(-2800,2000, ncol = 2, cex = 1.4, bg = "white",
-       legend = c(expression('y'[57]), "B"),
+       legend = c(expression('y'[33]), "B"),
        pch = c(NA, 3), lty = c(1, NA),
        col = c("darkgreen", 'purple4'),
        lwd = c(2, 2), pt.cex = c(NA, 1.5), text.font = 2)
