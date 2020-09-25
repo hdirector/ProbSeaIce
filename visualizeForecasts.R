@@ -91,53 +91,50 @@ obs_poly <- get_region(obs_curr, dat_type = "simple")
 
 #Visualize all forecasts
 con_color <- "red"
-con_lwd <- 1
+con_lwd <- 2
 cwid = 8
 main_size = 1.6
 pdf("Paper/Figures/visSep.pdf", height = 7, width = 7)
-par(oma = c(.1, 1, 3, 2.5), mar = c(.1, 1, 1.5, 0))
-layout(matrix(nrow = 13, ncol = 2*cwid + 1, byrow = TRUE,
+par(oma = c(.1, 1, 3, 3), mar = c(.1, 1, 1.5, 0))
+layout(matrix(nrow = 14, ncol = 2*cwid + 1, byrow = TRUE,
               data = c(rep(c(rep(1:2, each = cwid), 6), 6),
                        rep(c(rep(3:4, each = cwid), 6), 6),
-                       rep(5, 2*cwid + 1))))
+                       c(rep(5, 2*cwid), 6),
+                       c(rep(5, 2*cwid), 6))))
 xBdInd <- 60:215; xBdN <- length(xBdInd) 
 yBdInd <- 130:310; yBdN <- length(yBdInd)
 image(xBd[xBdInd], yBd[yBdInd], dyn_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 1)]], 
-      xaxt = "n",   yaxt = "n", col = c(rep(viridis(10), each = 10), "grey", "beige"),
+      xaxt = "n",   yaxt = "n", col = c(rep(viridis(10), each = 10), "grey55", "black"),
       main = "Ensemble", zlim = c(0, 102/100), xlab = "", ylab = "",
       cex.main = main_size)
 plot(obs_poly, add = T, border = con_color, lwd = con_lwd)
 image(xBd[xBdInd], yBd[yBdInd], cont_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 1)]],
-      xaxt = "n",   yaxt = "n", col = c(rep(viridis(10), each = 10), "grey", "beige"),
+      xaxt = "n",   yaxt = "n", col = c(rep(viridis(10), each = 10), "grey55", "black"),
       zlim = c(0, 102/100), xlab = "", ylab = "", main = "Contour",
       cex.main = main_size)
 plot(obs_poly, add = T, border = con_color, lwd = con_lwd)
 image(xBd[xBdInd], yBd[yBdInd], clim_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 1)]], 
-      xaxt = "n",  yaxt = "n", col = c(rep(viridis(10), each = 10), "grey", "beige"),
+      xaxt = "n",  yaxt = "n", col = c(rep(viridis(10), each = 10), "grey55", "black"),
       zlim = c(0, 102/100), xlab = "", ylab = "",
       main = "Climatology", cex.main = main_size)
 plot(obs_poly, add = T, border = con_color, lwd = con_lwd)
 image(xBd[xBdInd], yBd[yBdInd], mcf_prob[xBdInd[1:(xBdN - 1)], yBdInd[1:(yBdN - 1)]],
-      xaxt = "n", yaxt = "n", col = c(rep(viridis(10), each = 10), "grey", "beige"),
+      xaxt = "n", yaxt = "n", col = c(rep(viridis(10), each = 10), "grey55", "black"),
       zlim = c(0, 102/100), xlab = "", ylab = "", main = "Mixture Contour Forecast",
       cex.main = main_size)
 plot(obs_poly, add = T, border = con_color, lwd = con_lwd)
-plot.new()
-legend(.1, 1, fill = c("grey", "beige", NA), 
-       legend = c("land", "Outside Region", "Observed Contour"),
-       lty = c(NA, NA, 1), pch = c(22, 22, NA), ncol = 3, cex = 1,
-       col = c("white", "white", "red"), lwd = c(NA, NA, 2),
-       bg = 'white', border = c("black", "black", "white"),
-       pt.cex = c(3, 3, 3), text.font = 2)
-plot.new()
 mtext(sprintf("%s %i, Lead Time %s Months", month.abb[month], year,
               lag +  0.5), outer= TRUE, cex = 1.2, font = 2, line = .5)
+plot.new()
+legend("center", fill = c("grey55", "black", NA), 
+       legend = c("land", "Outside Region", "Observed Contour"),
+       lty = c(NA, NA, 1), pch = c(22, 22, NA), ncol = 2, cex = 2,
+       col = c(NA, NA, "red"), lwd = c(NA, NA, 8),
+       bg = 'white', border = c("black", "black", "white"),
+       pt.cex = c(3, 3, 3), text.font = 2, bty = "n")
+plot.new()
 image.plot(mcf_prob, zlim = c(0, 1), col = viridis(10), legend.only = TRUE,
-           legend.width = 10, legend.shrink = .65)
+           legend.width = 8, legend.shrink = .8, axis.args=list(cex.axis=1.8))
 dev.off()
-
-
-
-
 
 

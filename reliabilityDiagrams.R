@@ -245,13 +245,13 @@ p_g2 <- ggplot(filter(calib_sum, lag_l2 == ">= 2 month lag"),
                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
   theme(strip.text = element_text(colour = 'navy', face = "bold"))
 
-pdf("Paper/Figures/calib_l2.pdf", width = 8.5, height = 8.5)
+#pdf("Paper/Figures/calib_l2.pdf", width = 8.5, height = 8.5)
 p_l2 + facet_grid(rows = vars(mod), cols = vars(season), switch = "y")
-dev.off()
+#dev.off()
 
-pdf("Paper/Figures/calib_g2.pdf", width = 8.5, height = 8.5)
+#pdf("Paper/Figures/calib_g2.pdf", width = 8.5, height = 8.5)
 p_g2 + facet_grid(rows = vars(mod), cols = vars(season), switch = "y")
-dev.off()
+#dev.off()
 
 
 #------------------------------------------------------------
@@ -264,9 +264,8 @@ calib_ASO$lag_l2 <-  recode(calib_ASO$lag_l2,
 
 p_ASO <- ggplot(filter(calib_ASO),
                    aes(x = cat, y = mean_prop_obs, color = month)) +
-  geom_point(size = .95)  +
+  geom_point(size = 1.2, aes(shape = month))  +
   geom_abline(intercept = 0, slope = 1) +
-  labs(caption = "Probabilities grouped to nearest 1/25") +
   xlab("Forecast Probability") + ylab("Observed Proportion") +
   scale_x_continuous(breaks = c(0, .25, .5, .75, 1),
                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
@@ -280,25 +279,26 @@ dev.off()
 
 
 #----------------------------------------------------------
-#Reliability Diagrams for September, introduction section
+#Reliability Diagrams for September, introduction section 
+# (removed from revision 2 to reduce length)
 #----------------------------------------------------------
-calib_sep <- filter(calib_sum, month == "Sep" & lag_l2 == "<2 month lag" &
-                     mod != "TAQM")
-p_sep <- ggplot(filter(calib_sep),
-                aes(x = cat, y = mean_prop_obs, color = month)) +
-  geom_point(size = .95)  +
-  geom_abline(intercept = 0, slope = 1) +
-  labs(caption = "Probabilities grouped to nearest 1/25") +
-  xlab("Forecast Probability") + ylab("Observed Proportion") +
-  scale_x_continuous(breaks = c(0, .25, .5, .75, 1),
-                     labels=c("0", "0.25", "0.5", "0.75", "01")) +
-  scale_y_continuous(breaks = c(0, .25, .5, .75, 1),
-                     labels=c("0", "0.25", "0.5", "0.75", "01")) +
-  theme(strip.text = element_text(colour = 'navy', face = "bold")) + 
-  theme(legend.position = "none")
-pdf("Paper/Figures/calib_sep.pdf", height = 3, width = 5)
-p_sep + facet_grid(cols = vars(mod), switch = "y")
-dev.off()
+# calib_sep <- filter(calib_sum, month == "Sep" & lag_l2 == "<2 month lag" &
+#                      mod != "TAQM")
+# p_sep <- ggplot(filter(calib_sep),
+#                 aes(x = cat, y = mean_prop_obs, color = month)) +
+#   geom_point(size = .95)  +
+#   geom_abline(intercept = 0, slope = 1) +
+#   labs(caption = "Probabilities grouped to nearest 1/25") +
+#   xlab("Forecast Probability") + ylab("Observed Proportion") +
+#   scale_x_continuous(breaks = c(0, .25, .5, .75, 1),
+#                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
+#   scale_y_continuous(breaks = c(0, .25, .5, .75, 1),
+#                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
+#   theme(strip.text = element_text(colour = 'navy', face = "bold")) + 
+#   theme(legend.position = "none")
+# #pdf("Paper/Figures/calib_sep.pdf", height = 3, width = 5)
+# p_sep + facet_grid(cols = vars(mod), switch = "y")
+# #dev.off()
 
 ##################################
 #number of point counts

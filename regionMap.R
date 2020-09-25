@@ -1,13 +1,16 @@
 library("IceCast")
-pdf("Paper/Figures/regionMap.pdf")
+pdf("Paper/Figures/regionMap.pdf", height = 3, width = 2)
+par(oma = c(2, 0, 0, 0), mar = c(0, 0, 0, 0))
+#---------------------------------------
+#region maps
+#---------------------------------------
 xBdInd <- 55:225; xBdN <- length(xBdInd)
 yBdInd <- 130:310; yBdN <- length(yBdInd)
 par(oma = rep(0, 4), mar = rep(0, 4))
 #colors
-lineCols <- c("darkblue", "purple4", "darkgreen",
-              "hotpink", "darkred")
-regCols <- c("dodgerblue1", "mediumpurple1", "lightgreen",
-             "lightpink", "coral")
+lineCols <- rep("grey5", 5)
+regCols <- c("khaki1", "lavender", "lightgreen",
+             "mistyrose", "lightsalmon")
 
 
 #Read in NSIDC regions
@@ -27,15 +30,14 @@ xmn = -3850; xmx = 3750; ymn = -5350; ymx = 5850 #min and max
 bbPts <- rbind(c(xmn, ymn), c(xmn, ymx), c(xmx, ymx), c(xmx, ymn))
 bb <- SpatialPolygons(list(Polygons(list(Polygon(bbPts)), "box")))
 
-
 #make map
 nReg <- length(reg_info$regions)
-plot(bb, col = 'beige', border = 'white')
+plot(bb, col = 'white', border = 'white')
 for (i in 1:nReg) {
   plot(reg_info$regions[[i]], add = T, col = regCols[i], border = regCols[i])
 }
-plot(non_reg, col = "white", add = T, border = "white")
-plot(land, add = T, col = 'grey', border = 'grey')
+plot(non_reg, col = "white", add = T, border = "white", )
+plot(land, add = T, col = 'grey55', border = 'grey55')
 plot(reg_info$start_lines[[1]], add = T, col = lineCols[1],
      lwd = 2)
 
@@ -48,19 +50,14 @@ for (r in 2:nReg) {
   n_lines_r <- nrow(reg_info$start_coords[[r]])
   a2 <- which.min(apply(reg_info$start_lines_coords[[r]], 1,
                         function(x){get_dist(x,reg_info$start_coords[[r]][n_lines_r,])}))
-  points(reg_info$start_lines_coords[[r]][a1:a2,], col = lineCols[[r]], type= 'l')
-  points(reg_info$start_coords[[r]], pch = 20, cex = .3, col = lineCols[[r]])
+  points(reg_info$start_coords[[r]], pch = 20, cex = .6, col = lineCols[[r]])
 }
-plot(bb, border = "black", lwd = 2, add = T)
 
 
-text(1000, 2800, "Russia", font = 2, cex = .65, col= 'navy')
-text(-2700, 1000, "Alaska", font = 2, cex = .65, col= 'navy')
-text(-2800, -1700, "Canada", font = 2, cex = .65, col= 'navy')
-text(-500, 500, "Central Arctic", font = 2, cex = .65)
-text(-2700, 2300, "Bering Sea", font = 2, cex = .65)
-text(-600, -3000, "Baffin \n Bay", font = 2, cex = .65)
-text(1250, -1500, "Greenland \n Sea", font = 2, cex = .65)
-text(-950, 4000, "Sea of \n Okhotsk", font = 2, cex = .65)
+text(1000, 2800, "Russia", font = 2, cex = .6, col= 'black')
+text(-2600, 1000, "Alaska", font = 2, cex = .6, col= 'black')
+text(-2800, -1400, "Canada", font = 2, cex = .6, col= 'black')
+
+
 
 dev.off()

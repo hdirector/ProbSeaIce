@@ -89,6 +89,7 @@ save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_
 y_years_bc <- y_bc$start_year:y_bc$end_year
 n_bc_years <- length(y_years_bc)
 train_ind <- (1:n_bc_years)[y_years_bc %in% train_start_year:train_end_year]
+
 y_train <- find_y(start_year = train_start_year, end_year = train_end_year,
                   obs_start_year = train_start_year,
                   pred_start_year = NULL, observed = obs[train_ind, month,,],
@@ -100,7 +101,7 @@ temp <- to_fit(y_obs = y_train$obs, reg_info)
 regs_to_fit <- temp$regs_to_fit
 full <- temp$full
 
-#convert lengths to proportions and transformed porportions
+#convert lengths to proportions 
 prop_train <- y_to_prop(y = y_train$obs, regs_to_fit, reg_info)
 prop_train <- lapply(prop_train, function(y){sapply(y, function(x){x})})
 
@@ -139,6 +140,7 @@ for (r in regs_to_fit)  {
   elapse_time <- end_time - start_time
   print(sprintf("MCMC for region %i finished, elapsed time %f", r, elapse_time[3]))
 }
+
 if (forecast_year == 2005 & lag  == 1) {
 	save(res, file = sprintf("/homes/direch/probForecast/results/cont_fits/cont_fit_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
 							 task_id, month, forecast_year, train_start_year, train_end_year, init_month))
@@ -146,7 +148,7 @@ if (forecast_year == 2005 & lag  == 1) {
 #Compute mu and sigma for each region
 pars <- list()
 for (r in regs_to_fit) {
-  pars[[r]] <- calc_pars(res_r = res[[r]], burn_in)
+  pars[[r]] <- calc_pars(res_r = res[[r]], burn_in, r = r)
 }
 
 print("fitting complete")

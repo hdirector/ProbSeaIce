@@ -261,27 +261,24 @@ brier_prob_month <- brier_sum %>%
 
 p_brier_prob_ASO <- ggplot(data = brier_prob_month, 
                             aes(x = lag, y = mean, group = mod)) +
-  geom_point(aes(color = mod), show.legend = FALSE) + 
-  geom_line(aes(linetype = mod, color = mod), show.legend = TRUE) + 
+  geom_point(aes(color = mod, shape = mod), size = 3, show.legend = TRUE) +
+  geom_line(aes(color = mod), show.legend = FALSE) + 
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
   ylim(0, .083) + 
  theme(legend.position="bottom", plot.title = element_text(hjust = 0.5),
         legend.text = element_text(size = 12)) +
-  scale_linetype_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
+  scale_shape_discrete(breaks = c("clim_prob", "dyn_prob", "cont_prob",
                             "mcf_prob", "taqm"),
-                 values = 1:5,
                  labels = prob_formal[1:5],
-                 guide_legend(nrow = 2)) + 
-  scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
+                 guide_legend(nrow = 2, title = "")) +
+  scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob",
                                 "mcf_prob", "taqm"),
                      values = six_colors[1:5],
                      labels = prob_formal[1:5],
-                     guide_legend(nrow = 2)) +
+                     guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic  Forecast Performance,
-          2008-2016") +
-  guides(col = guide_legend(nrow = 2, title = "")) +
-  guides(linetype = guide_legend(nrow = 2, title = ""))
+          2008-2016") 
 
 
 pdf("Paper/Figures/brier_prob_ASO.pdf", width = 10, height = 5)
@@ -296,37 +293,24 @@ brier_prob_seas <- brier_sum %>%
   group_by(lag, mod, season, mod_type) %>%
   dplyr::summarize(mean = mean(mean))
 p_brier_prob_seas <- ggplot(data = brier_prob_seas, 
-                             aes(x = lag, y = mean, group = mod, col = mod)) +
-  geom_point(show.legend = FALSE) + 
-  geom_line(aes(linetype = mod, color = mod), show.legend = TRUE)+ 
+                            aes(x = lag, y = mean, group = mod, col = mod)) +
+  geom_point() + 
+  geom_line(aes(linetype=mod_type), show.legend = FALSE)+ 
   xlab("Lead Time (in months)") +
   ylab("Mean Brier Score") +
   ylim(0, .095) + 
   theme(legend.position="bottom", plot.title = element_text(hjust = 0.5),
         legend.text = element_text(size = 12)) +
-  scale_linetype_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
-                                   "mcf_prob", "taqm", "dPersis"),
-                        values = 1:6,
-                        labels = prob_formal,
-                        guide_legend(nrow = 2)) + 
   scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
                                 "mcf_prob", "taqm", "dPersis"),
                      values = six_colors,
-                     labels = prob_formal,
-                     guide_legend(nrow = 2)) +
-  # scale_color_manual(breaks = c("clim_prob", "dyn_prob", "cont_prob", 
-  #                               "mcf_prob", "taqm", "dPersis"),
-  #                      values = six_colors,
-  #                      labels = prob_formal) +
-  # scale_linetype_manual(breaks = c("prob", "bin"),
-  #                       values = c("solid", "dashed"),
-  #                       labels = c("Probabilistic", "Binary")) +
-  ggtitle("Probabilistic  Forecast Performance,
-          2008-2016") +
+                     labels = prob_formal) +
+  scale_linetype_manual(breaks = c("prob", "bin"),
+                        values = c("solid", "dashed"),
+                        labels = c("Probabilistic", "Binary")) +
   guides(col = guide_legend(nrow = 2, title = "")) +
-  guides(linetype = guide_legend(nrow = 2, title = "")) 
-  
-
+  ggtitle("Probabilistic  Forecast Performance,
+          2008-2016")
 pdf("Paper/Figures/brier_prob_seas.pdf", width = 10, height = 5)
 p_brier_prob_seas + facet_grid(cols = vars(season))
 dev.off()
