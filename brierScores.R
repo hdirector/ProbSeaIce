@@ -1,15 +1,42 @@
-#Script to produce all Brier score plots in paper and supplement
-
-#Note that abbreviated names of forecasts are used here compared to the paper
-# dPersis = Damped persistence, clim_bin = binary climatology,
-# clim_prob = probabilistic climatology, dyn_bin = binary ensemble
-# dyn_prob = probabilistic ensemble, 
-# cont_prob = post-processed ensemble probabilistic
-# cont_bin = post-processed ensemble binary (contour-shifting), 
-# taqm = trend adjusted quantile mapping (Dirkson et al 2019),
-# mcf_prob = Mixture Contour Forecasts probabilistic
-# mcf_bin = Mixture Contour Forecasts binary
-
+#-------------------------------------------------------------------------------
+# Script to produce all analyses related to Brier Score (produces Figure 6 in 
+# paper and Figures 1-4 in Supplement)
+#
+# Code to compute the brier scores is currently commented out. Figures can be 
+# generated with just the summary data table: brier.rda.
+#
+# To run sections of code that are currently commented out, the following data 
+# and results are required
+# Requires Data: ecmwfsipn_sip (arrays named 'sip' with proportion of members
+#                               predicting sea ice from the ECWMF ensemble
+#                               on Polar Stereographic grid for each 
+#                               initialization month. Dimensions are year
+#                               x month x longitude x latitude. Forecasts from 
+#                               1993 - 2018)
+#                bootstrapV3_1 (Bootstrap sea ice observations, version 3.1
+#                               downloaded from the National Snow and Ice Data
+#                               Center, in original binary form)
+#                psn25area_v3.mat (Matlab file with dimension 304 x 448 that 
+#                                  gives area of which grid box in Polar 
+#                                  Stereographic grid)
+#
+# Requires Results: clim_bin (computed binary climatology reference forecasts 
+#                             obtained with clim_ref.R script)
+#                   clim_prob (computed probabilistic climatology reference 
+#                             forecasts obtained with clim_ref.R script)
+#                   dPersis (computed damped persistence reference forecasts 
+#                             obtained with dPersis_ref.R script)
+#                   taqm (trend adjusted quantile mapping results, obtained
+#                         with Dirkson et al. python scripts)
+#                   cont_bin (computed binary forecast from contour model, 
+#                             obtained with fitAndGen.R script)
+#                   cont_prob (computed probabilistic forecast from contour 
+#                              model, obtained with fitAndGen.R script)
+#                   mcf_bin (computed binary MCF forecast, obtained with
+#                             wght_EM.R script)
+#                   mcf_prob (computed probabilistic MCF forecast, obtained with
+#                             wght_EM.R script)
+#-------------------------------------------------------------------------------
 
 #set up
 library("IceCast")
@@ -19,7 +46,7 @@ years <- 2008:2016
 lags <- 0:6
 nX <- 304; nY <- 448
 stat_train <- 10
-sip_filepath <- "/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Data/ecmwfsipn/forecast/ecmwfsipn_sip"
+#sip_filepath <- "Data/ecmwfsipn/forecast/ecmwfsipn_sip"
 sip_start_year <- 1993
 
 #identify non-regional ocean
@@ -51,11 +78,11 @@ n_years <- length(years)
 n_lags <- length(lags)
 
 #Load observations,
-obs_file_path <-  "Data/bootstrapV3_1/"
-obs <- read_monthly_BS(start_year = years[1], 
-                       end_year = years[length(years)], 
-                       version = 3.1,
-                       file_folder = obs_file_path)
+# obs_file_path <-  "Data/bootstrapV3_1/"
+# obs <- read_monthly_BS(start_year = years[1],
+#                       end_year = years[length(years)],
+#                       version = 3.1,
+#                       file_folder = obs_file_path)
 
 #make data frame of all test cases and models
 cases <- expand.grid(years, months, lags)
@@ -66,32 +93,32 @@ colnames(fcasts) <- c("dPersis", "clim_bin", "clim_prob",  "dyn_bin", "dyn_prob"
 brier <- data.frame(cbind(cases, fcasts))
 
 
-###load one observation and one prediction to identify differences in NA patterns
+#load one observation and one prediction to identify differences in NA patterns
 #between dynamic model and post-processed
-load(sprintf("%s/initMonth1.rda", sip_filepath))
-dyn_prob <- sip[1,1,,]
-#observation for comparison
-obs_temp <- obs[1, 1,,]
-obs_temp[obs_temp == 120] <- NA #land index
-obs_temp[obs_temp == 110] <- 100 #satellite hole is ice
-obs_curr <- matrix(nrow = nX, ncol = nY)
-obs_curr[obs_temp >= .15] <- 1
-obs_curr[obs_temp < .15] <- 0
-obs_curr[land_mat == 1] <- NA
-NA_in_dyn <- which(is.na(dyn_prob) & !is.na(obs_curr))
-rm(sip)
+# load(sprintf("%s/initMonth1.rda", sip_filepath))
+# dyn_prob <- sip[1,1,,]
+# #observation for comparison
+# obs_temp <- obs[1, 1,,]
+# obs_temp[obs_temp == 120] <- NA #land index
+# obs_temp[obs_temp == 110] <- 100 #satellite hole is ice
+# obs_curr <- matrix(nrow = nX, ncol = nY)
+# obs_curr[obs_temp >= .15] <- 1
+# obs_curr[obs_temp < .15] <- 0
+# obs_curr[land_mat == 1] <- NA
+# NA_in_dyn <- which(is.na(dyn_prob) & !is.na(obs_curr))
+# rm(sip)
 
 #load areas of each grid box and compute area weighting
-library("R.matlab")
-temp <- readMat("Data/grids/psn25area_v3.mat")
-grid_area <- temp$area
-grid_area[is.na(dyn_prob)] <- NA
-grid_area[non_reg_ocean == 1] <- NA
-tot_area <- sum(grid_area, na.rm = T)
-prop_area <- grid_area/tot_area
-stopifnot(sum(prop_area, na.rm = T) == 1)
+# library("R.matlab")
+# temp <- readMat("Data/grids/psn25area_v3.mat")
+# grid_area <- temp$area
+# grid_area[is.na(dyn_prob)] <- NA
+# grid_area[non_reg_ocean == 1] <- NA
+# tot_area <- sum(grid_area, na.rm = T)
+# prop_area <- grid_area/tot_area
+# stopifnot(sum(prop_area, na.rm = T) == 1)
 
-# #Compute brier scores for all cases and forecast types
+#Compute brier scores for all cases and forecast types
 # for (y in 1:n_years) {
 #   for (m in 1:n_months) {
 #     #observation for comparison
@@ -161,9 +188,9 @@ stopifnot(sum(prop_area, na.rm = T) == 1)
 #       rm(taqm)
 # 
 #       #post-processed ensemble binary ("cont_bin")
-#       f <- Sys.glob(file.path('Results/cont_bin', 
+#       f <- Sys.glob(file.path('Results/cont_bin',
 #                               sprintf("cont_bin_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
-#                                       months[m], years[y], train_start_year, 
+#                                       months[m], years[y], train_start_year,
 #                                       train_end_year, init_month)))
 #       load(f)
 #       cont_bin[NA_in_dyn] <- NA
@@ -172,7 +199,7 @@ stopifnot(sum(prop_area, na.rm = T) == 1)
 #       rm(cont_bin)
 # 
 #       #contour probabilistic ("cont_prob")
-#       f <- Sys.glob(file.path('Results/cont_prob', 
+#       f <- Sys.glob(file.path('Results/cont_prob',
 #                               sprintf("cont_prob_Task*_Month%i_Year%i_Train%i_%i_Init%i.rda",
 #                                       months[m], years[y], train_start_year,
 #                                       train_end_year, init_month)))
@@ -204,7 +231,7 @@ stopifnot(sum(prop_area, na.rm = T) == 1)
 load("Results/summaries/brier.rda")
 
 
-####Brier Score by  month, lag, model
+#Brier Score by  month, lag, model
 library("reshape2")
 library("tidyverse")
 library("dplyr")
@@ -281,9 +308,9 @@ p_brier_prob_ASO <- ggplot(data = brier_prob_month,
           2008-2016") 
 
 
-pdf("Paper/Figures/brier_prob_ASO.pdf", width = 10, height = 5)
+#pdf("Paper/Figures/brier_prob_ASO.pdf", width = 10, height = 5)
 p_brier_prob_ASO + facet_grid(cols = vars(month))
-dev.off()
+#dev.off()
 
 #------------------------------------------------
 #Prob. Brier score by season, supplement
@@ -311,9 +338,9 @@ p_brier_prob_seas <- ggplot(data = brier_prob_seas,
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic  Forecast Performance,
           2008-2016")
-pdf("Paper/Figures/brier_prob_seas.pdf", width = 10, height = 5)
+#pdf("Paper/Figures/brier_prob_seas.pdf", width = 10, height = 5)
 p_brier_prob_seas + facet_grid(cols = vars(season))
-dev.off()
+#dev.off()
 
 #------------------------------------------------
 #Binary Brier score by month ASO, results section
@@ -338,9 +365,9 @@ p_brier_bin_ASO <- ggplot(data = brier_bin_ASO,
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Binary Forecast Performance, 2008-2016")
 
-pdf("Paper/Figures/brier_bin_ASO.pdf", width = 10, height = 5)
+#pdf("Paper/Figures/brier_bin_ASO.pdf", width = 10, height = 5)
 p_brier_bin_ASO + facet_grid(cols = vars(month)) 
-dev.off()
+#dev.off()
 
 
 #------------------------------------------------
@@ -365,9 +392,9 @@ p_brier_bin_seas <- ggplot(data = brier_bin_seas,
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Binary Forecast Performance, 2008-2016")
 
-pdf("Paper/Figures/brier_bin_seas.pdf", width = 10, height = 5)
+#pdf("Paper/Figures/brier_bin_seas.pdf", width = 10, height = 5)
 p_brier_bin_seas + facet_grid(cols = vars(season)) 
-dev.off()
+#dev.off()
 
 #-------------------------------
 #Overall performance, supplement
@@ -398,6 +425,6 @@ p_brier_all <- ggplot(data = brier_all,
   guides(col = guide_legend(nrow = 2, title = "")) +
   ggtitle("Probabilistic Forecasts")
 
-pdf("Paper/Figures/overall_brier.pdf", width = 8, height = 5)
+#pdf("Paper/Figures/overall_brier.pdf", width = 8, height = 5)
 p_brier_all
-dev.off()
+#dev.off()

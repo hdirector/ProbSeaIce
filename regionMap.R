@@ -1,5 +1,12 @@
+#-------------------------------------------------------------------------------
+# Script to make Figure 1 in paper showing regions of analysis. 
+#
+# Requires Data: region_n.msk (region mask for the Arctic produced by the 
+#                              National Snow and Ice Data Center)
+#-------------------------------------------------------------------------------
+
 library("IceCast")
-pdf("Paper/Figures/regionMap.pdf", height = 3, width = 2)
+#pdf("Paper/Figures/regionMap.pdf", height = 3, width = 2)
 par(oma = c(2, 0, 0, 0), mar = c(0, 0, 0, 0))
 #---------------------------------------
 #region maps
@@ -14,7 +21,7 @@ regCols <- c("khaki1", "lavender", "lightgreen",
 
 
 #Read in NSIDC regions
-fileName <- "/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Data/grids/region_n.msk"
+fileName <- "Data/grids/region_n.msk"
 to.read <- file(fileName, "rb")
 nX <- 304; nY <- 448
 to.read = file(fileName, "rb")
@@ -43,13 +50,6 @@ plot(reg_info$start_lines[[1]], add = T, col = lineCols[1],
 
 
 for (r in 2:nReg) {
-  #find the line section between the first and last start coord
-  #in start_line_coords
-  a1 <- which.min(apply(reg_info$start_lines_coords[[r]], 1,
-                        function(x){get_dist(x,reg_info$start_coords[[r]][1,])}))
-  n_lines_r <- nrow(reg_info$start_coords[[r]])
-  a2 <- which.min(apply(reg_info$start_lines_coords[[r]], 1,
-                        function(x){get_dist(x,reg_info$start_coords[[r]][n_lines_r,])}))
   points(reg_info$start_coords[[r]], pch = 20, cex = .6, col = lineCols[[r]])
 }
 
@@ -57,7 +57,4 @@ for (r in 2:nReg) {
 text(1000, 2800, "Russia", font = 2, cex = .6, col= 'black')
 text(-2600, 1000, "Alaska", font = 2, cex = .6, col= 'black')
 text(-2800, -1400, "Canada", font = 2, cex = .6, col= 'black')
-
-
-
-dev.off()
+#dev.off()

@@ -1,12 +1,17 @@
-#Script to compute the damped persistence reference code for a particular month
-#and lag
+#-------------------------------------------------------------------------------
+# Script to compute damped persistence forecasts
+#
+# Requires Data:  bootstrapV3_1 (Bootstrap sea ice observations, version 3.1
+#                               downloaded from the National Snow and Ice Data
+#                               Center, in original binary form)
+#-------------------------------------------------------------------------------
 
 #month/lag combination to compute
 months <- 1
 lag <- 0
 
 #general set up
-library("IceCastV2")
+library("IceCast")
 fYears <- 2008:2016
 nX <- 304
 nY <- 448
@@ -14,7 +19,7 @@ nY <- 448
 #Read in observations
 allYears <- 1981:2016; nYears <- length(allYears)
 obs <- read_monthly_BS(allYears[1], allYears[nYears],
-                       file_folder = "/homes/direch/bootstrapV3_1/",
+                       file_folder = "Data/bootstrapV3_1/",
                        version = 3.1)
 obs[obs == 120] <- NA
 obs[obs == 110] <- 100 #pole hole assumed to be ice
@@ -117,8 +122,8 @@ for (m in months) {
     dPersis <- matrix(nrow = nX, ncol = nY, data = 0)
     dPersis[dPersisInit >= .15] <- 1
     dPersis[land_mat == 1] <- NA
-    save(dPersis, file = sprintf("~/probForecast/results/dPersis/dPersis_month%i_year%i_lag%i.rda",
-                                 m, t, lag))
+    #save(dPersis, file = sprintf("Results/dPersis/dPersis_month%i_year%i_lag%i.rda",
+    #                             m, t, lag))
     print(c(m ,t))
   }
 }

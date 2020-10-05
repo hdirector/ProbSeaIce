@@ -1,5 +1,28 @@
-#Code to make the figures in the paper showing four different contour forecasts
-
+#-------------------------------------------------------------------------------
+# Script to make Figure 4 in main paper showing four different forecasts
+#
+# Code to compute the calibration numbers is currently commented out. Figures 
+# can be generated with just the summary data table: calib.rda.
+#
+# To run sections of code that are currently commented out, the following data 
+# and results are required
+# Requires Data: ecmwfsipn_sip (arrays named 'sip' with proportion of members
+#                               predicting sea ice from the ECWMF ensemble
+#                               on Polar Stereographic grid for each 
+#                               initialization month. Dimensions are year
+#                               x month x longitude x latitude. Forecasts from 
+#                               1993 - 2018)
+#                bootstrapV3_1 (Bootstrap sea ice observations, version 3.1
+#                               downloaded from the National Snow and Ice Data
+#                               Center, in original binary form)
+#
+# Requires Results: clim_prob (computed probabilistic climatology reference 
+#                             forecasts obtained with clim_ref.R script)
+#                   cont_prob (computed probabilistic forecast from contour 
+#                              model, obtained with fitAndGen.R script)
+#                   mcf_prob (computed probabilistic MCF forecast, obtained with
+#                             wght_EM.R script)
+#-------------------------------------------------------------------------------
 #library
 library("IceCast")
 library("fields")
@@ -11,7 +34,7 @@ xmn = -3850; xmx = 3750; ymn = -5350; ymx = 5850
 xBd <- seq(xmn, xmx, 25)
 yBd <- seq(ymn, ymx, 25)
 n_train <- 10
-sip_filepath <- "/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Data/ecmwfsipn/forecast/ecmwfsipn_sip"
+sip_filepath <- "Data/ecmwfsipn/forecast/ecmwfsipn_sip"
 sip_start_year <- 1993
 
 #demo setting of interest
@@ -94,7 +117,7 @@ con_color <- "red"
 con_lwd <- 2
 cwid = 8
 main_size = 1.6
-pdf("Paper/Figures/visSep.pdf", height = 7, width = 7)
+#pdf("Paper/Figures/visSep.pdf", height = 7, width = 7)
 par(oma = c(.1, 1, 3, 3), mar = c(.1, 1, 1.5, 0))
 layout(matrix(nrow = 14, ncol = 2*cwid + 1, byrow = TRUE,
               data = c(rep(c(rep(1:2, each = cwid), 6), 6),
@@ -135,6 +158,6 @@ legend("center", fill = c("grey55", "black", NA),
 plot.new()
 image.plot(mcf_prob, zlim = c(0, 1), col = viridis(10), legend.only = TRUE,
            legend.width = 8, legend.shrink = .8, axis.args=list(cex.axis=1.8))
-dev.off()
+#dev.off()
 
 

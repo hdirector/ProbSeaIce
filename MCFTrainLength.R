@@ -1,5 +1,25 @@
-# Script to evaluate length of training period for weighting (produces table 
-# in supplemnt)
+#-------------------------------------------------------------------------------
+# Script to evaluate length of training period for weighting in MCF (produces
+# Table 4 in Supplement)
+#
+# Requires Data: ecmwfsipn_sip (arrays named 'sip' with proportion of members
+#                               predicting sea ice from the ECWMF ensemble
+#                               on Polar Stereographic grid for each 
+#                               initialization month. Dimensions are year
+#                               x month x longitude x latitude. Forecasts from 
+#                               1993 - 2018)
+#                bootstrapV3_1 (Bootstrap sea ice observations, version 3.1
+#                               downloaded from the National Snow and Ice Data
+#                               Center, in original binary form)
+#                psn25area_v3.mat (Matlab file with dimension 304 x 448 that 
+#                                  gives area of which grid box in Polar 
+#                                  Stereographic grid)
+#
+# Requires Results: clim_prob (computed climatology reference forecasts obtained
+#                              with clim_ref.R script
+#                   cont_prob (forecast from contour model, obtained with 
+#                              fitAndGen.R script)
+#-------------------------------------------------------------------------------
 
 library("IceCast")
 library("tidyverse")
@@ -48,7 +68,7 @@ obs_all <- obs_all/100
 obs_all[obs_all >= .15] <- 1
 obs_all[obs_all < .15] <- 0
 
-###load one observation and one prediction to identify differences in NA patterns
+#load one observation and one prediction to identify differences in NA patterns
 #between dynamic model and post-processed
 load(sprintf("%s/initMonth1.rda", sip_filepath))
 dyn_prob <- sip[1,1,,]
@@ -65,7 +85,7 @@ rm(sip)
 #load areas of each grid box and compute area weighting
 library("R.matlab")
 temp <- readMat("Data/grids/psn25area_v3.mat")
-grid_area <- temp$area
+ligrid_area <- temp$area
 grid_area[is.na(dyn_prob)] <- NA
 grid_area[non_reg_ocean == 1] <- NA
 tot_area <- sum(grid_area, na.rm = T)

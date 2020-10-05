@@ -1,18 +1,19 @@
-#Code to make the figures in the paper that show the figure diagramming 
-#the components of the contour model (lines, boundary points, etc.) 
+#-------------------------------------------------------------------------------
+# Script to make Figure 2 in paper diagramming the components of the contour 
+# model (lines, boundary points, etc.) 
+#-------------------------------------------------------------------------------
 
 library("IceCast")
 nReg <- length(reg_info$regions)
 
-
 #----------------------------------------
 #make diagram of contour model components
 #----------------------------------------
-pdf("Paper/Figures/boundLines.pdf",height = 4.5, width = 8.5)
+#pdf("Paper/Figures/boundLines.pdf",height = 4.5, width = 8.5)
 layout(matrix(c(1, 2, 2), byrow = T, ncol = 3))
-par(oma = c(2,1,1,1), mar = c(2, 1, 1, 1))
+#par(oma = c(2,1,1,1), mar = c(2, 1, 1, 1))
 
-###Bering sea 
+#Bering sea 
 #region to plot
 bbBerPts <- rbind(c(-3600, 1000), c(-3600, 3900), c(-1300, 3900), c(-1300, 1000))
 bbBer <- SpatialPolygons(list(Polygons(list(Polygon(bbBerPts)), "bbBer")))
@@ -76,7 +77,8 @@ plot(reg_info$regions[[1]], add = T, lwd = 1, col = 'white', border = 'white')
 plot(rm_holes(newReg), col = 'lightblue', add = T, lwd = 2, border = "lightblue", 
      lty = 2)
 plot(rm_holes(newReg), add = T, lwd = 2, border = "blue", lty = 2)
-plot(keep_poly(gIntersection(land, rm_holes(bbCA))), add = T, col = 'grey', border = 'grey')
+plot(keep_poly(gIntersection(land, rm_holes(bbCA))), add = T, col = 'grey55', 
+     border = 'grey55')
 
 for (i in 1:length(reg_info$lines[[1]])) {
   plot(reg_info$lines[[1]][[i]], add = T, col = "mediumpurple")
@@ -102,7 +104,7 @@ legend(-4500, -1350, ncol = 3, cex = 2,
        fill = c(NA, NA,  "lightblue", "white", "grey55", "grey5"),
        xpd = NA, text.width = 800, bty = "n")
 
-dev.off()
+#dev.off()
 
 
 

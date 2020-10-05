@@ -1,3 +1,29 @@
+#-------------------------------------------------------------------------------
+# Script to produce all reliability diagrams (produces Figure 5 in paper and 
+# Figures 5-6 in Supplement)
+#
+# Code to compute the calibration numbers is currently commented out. Figures 
+# can be generated with just the summary data table: calib.rda.
+#
+# To run sections of code that are currently commented out, the following data 
+# and results are required
+# Requires Data: ecmwfsipn_sip (arrays named 'sip' with proportion of members
+#                               predicting sea ice from the ECWMF ensemble
+#                               on Polar Stereographic grid for each 
+#                               initialization month. Dimensions are year
+#                               x month x longitude x latitude. Forecasts from 
+#                               1993 - 2018)
+#                bootstrapV3_1 (Bootstrap sea ice observations, version 3.1
+#                               downloaded from the National Snow and Ice Data
+#                               Center, in original binary form)
+#
+# Requires Results: taqm (trend adjusted quantile mapping results, obtained
+#                         with Dirkson et al. python scripts)
+#                   mcf_prob (computed probabilistic MCF forecast, obtained with
+#                             wght_EM.R script)
+#-------------------------------------------------------------------------------
+
+
 #Script to produce all reliability diagrams in the paper
 rm(list = ls())
 
@@ -11,16 +37,16 @@ years <- 2008:2016
 lags <- 0:6
 nX <- 304; nY <- 448
 stat_train <- 10
-sip_filepath <- "/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Data/ecmwfsipn/forecast/ecmwfsipn_sip"
+# sip_filepath <- "Data/ecmwfsipn/forecast/ecmwfsipn_sip"
 sip_start_year <- 1993
 n_ens <- 25
 
 #Load observations,
-obs_file_path <-  "Data/bootstrapV3_1/"
-obs <- read_monthly_BS(start_year = years[1],
-                       end_year = years[length(years)],
-                       version = 3.1,
-                       file_folder = obs_file_path)
+# obs_file_path <-  "Data/bootstrapV3_1/"
+# obs <- read_monthly_BS(start_year = years[1],
+#                        end_year = years[length(years)],
+#                        version = 3.1,
+#                        file_folder = obs_file_path)
 
 
 #identify non-regional ocean
@@ -33,20 +59,20 @@ n_months <- length(months)
 n_years <- length(years)
 n_lags <- length(lags)
 
-###load one observation and one prediction to identify differences in NA patterns
+#load one observation and one prediction to identify differences in NA patterns
 #between dynamic model and post-processed
-load(sprintf("%s/initMonth1.rda", sip_filepath))
-dyn_prob <- sip[1,1,,]
-#observation for comparison
-obs_temp <- obs[1, 1,,]
-obs_temp[obs_temp == 120] <- NA #land index
-obs_temp[obs_temp == 110] <- 100 #satellite hole is assumed to be ice
-obs_curr <- matrix(nrow = nX, ncol = nY)
-obs_curr[obs_temp >= .15] <- 1
-obs_curr[obs_temp < .15] <- 0
-obs_curr[land_mat == 1] <- NA
-NA_in_dyn <- which(is.na(dyn_prob) & !is.na(obs_curr))
-rm(sip)
+# load(sprintf("%s/initMonth1.rda", sip_filepath))
+# dyn_prob <- sip[1,1,,]
+# #observation for comparison
+# obs_temp <- obs[1, 1,,]
+# obs_temp[obs_temp == 120] <- NA #land index
+# obs_temp[obs_temp == 110] <- 100 #satellite hole is assumed to be ice
+# obs_curr <- matrix(nrow = nX, ncol = nY)
+# obs_curr[obs_temp >= .15] <- 1
+# obs_curr[obs_temp < .15] <- 0
+# obs_curr[land_mat == 1] <- NA
+# NA_in_dyn <- which(is.na(dyn_prob) & !is.na(obs_curr))
+# rm(sip)
 
 #Function to figure out the probability bins giveen the number of ensembles
 get_cat_info <- function(n_ens) {
@@ -188,7 +214,7 @@ lag_lab <- c(">= 2 month lag", "<2 month lag")
 calib_prop <- calib_prop %>% mutate("lag_l2" = factor(lag_lab[as.numeric(lag >= 2) + 1],
                                                       levels = c("<2 month lag", ">= 2 month lag")))
 
-#add seaoson category
+#add season category
 calib_prop<- calib_prop %>%  
   mutate(season = ifelse(month %in% 1:3, "Jan/Feb/Mar",
                          ifelse(month %in% 4:6, "Apr/May/Jun", 
@@ -273,15 +299,15 @@ p_ASO <- ggplot(filter(calib_ASO),
                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
   theme(strip.text = element_text(colour = 'navy', face = "bold"))
 
-pdf("Paper/Figures/calib_ASO.pdf", width = 7, height = 4)
+#pdf("Paper/Figures/calib_ASO.pdf", width = 7, height = 4)
 p_ASO + facet_grid(cols = vars(mod), rows= vars(lag_l2), switch = "y")
-dev.off()
+#dev.off()
 
 
-#----------------------------------------------------------
-#Reliability Diagrams for September, introduction section 
-# (removed from revision 2 to reduce length)
-#----------------------------------------------------------
+# # ----------------------------------------------------------
+# # Reliability Diagrams for September (not used in final
+# # version to  to reduce length)
+# # ----------------------------------------------------------
 # calib_sep <- filter(calib_sum, month == "Sep" & lag_l2 == "<2 month lag" &
 #                      mod != "TAQM")
 # p_sep <- ggplot(filter(calib_sep),
@@ -294,36 +320,8 @@ dev.off()
 #                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
 #   scale_y_continuous(breaks = c(0, .25, .5, .75, 1),
 #                      labels=c("0", "0.25", "0.5", "0.75", "01")) +
-#   theme(strip.text = element_text(colour = 'navy', face = "bold")) + 
+#   theme(strip.text = element_text(colour = 'navy', face = "bold")) +
 #   theme(legend.position = "none")
 # #pdf("Paper/Figures/calib_sep.pdf", height = 3, width = 5)
 # p_sep + facet_grid(cols = vars(mod), switch = "y")
 # #dev.off()
-
-##################################
-#number of point counts
-##################################
-n_cat <- length(cat_info$mean_cat)
-n_tab <- data.frame("cat" = cat_info$mean_cat,
-                    "n_l2_dyn_prob" = rep(NA, n_cat),
-                    "n_l2_mcf_prob" = rep(NA, n_cat), 
-                    "n_l2_taqm" = rep(NA, n_cat),
-                    "n_g2_dyn_prob" = rep(NA, n_cat),
-                    "n_g2_mcf_prob" = rep(NA, n_cat),
-                    "n_g2_taqm" = rep(NA, n_cat))
-
-calib_sum$cat <- as.factor(calib_sum$cat)
-cat_info$mean_cat <- as.factor(cat_info$mean_cat)
-calib_sum$sum_n <- as.numeric(calib_sum$sum_n)
-calib_sum$month <-  as.numeric(calib_sum$month)
-for (i in 1:n_cat) {
-  ind_l2 <- which(calib_sum$cat == cat_info$mean_cat[i] & calib_sum$month == '9'
-                  & calib_sum$lag_l2 == "<2 month lag")
-  n_tab[i, 2:4] <- calib_sum[ind_l2,]$sum_n
-  ind_g2 <- which(calib_sum$cat == cat_info$mean_cat[i] & calib_sum$month == 9
-                  & calib_sum$lag_l2 == ">= 2 month lag")
-  n_tab[i, 5:7] <- calib_sum[ind_g2,]$sum_n
-}
-
-n_sum <- apply(n_tab[,2:7], 2, function(x){c(median(x), min(x))})
-rownames(n_sum) <- c("median", "min")

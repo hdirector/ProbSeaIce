@@ -1,14 +1,30 @@
 #-------------------------------------------------------------------------------
+# Script to compute contour forecast for a particular year, month, lead 
+# times, and training length (one line in task_table). Designed to be used on
+# a cluster
+#
+# Requires Data: ecmwfsipn_sip (arrays named 'sip' with proportion of members
+#                               predicting sea ice from the ECWMF ensemble
+#                               on Polar Stereographic grid for each 
+#                               initialization month. Dimensions are year
+#                               x month x longitude x latitude. Forecasts from 
+#                               1993 - 2018)
+#                bootstrapV3_1 (Bootstrap sea ice observations, version 3.1
+#                               downloaded from the National Snow and Ice Data
+#                               Center, in original binary form)
+#
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
 #General set up
 #-------------------------------------------------------------------------------
-rm(list = ls())
 set.seed(104)
 n_gen <- 100
 
 #load task information
 args <- commandArgs(trailingOnly =TRUE)
 task_id <- as.numeric(args[1])
-task_path <-"/homes/direch/probForecast/ecmwfExper.rda"
+task_path <- ".../exper_design/ecmwfExper.rda" 
 load(task_path)
 task <- task_table[task_id,]
 attach(task)
@@ -17,12 +33,12 @@ print(sprintf("Executing fitContours taskID  %i:, month: %i, year %i, training y
 eps <- .01
 
 #info on observations
-obs_file_path <- '/homes/direch/bootstrapV3_1/'
+obs_file_path <- '.../Data/bootstrapV3_1/' 
 bs_version <- 3.1
 dat_type_obs <- "bootstrap"
 
 #info on dynamic model
-dyn_path <-"/homes/direch/ecmwfsipn/ecmwfsipn_sip"
+dyn_path <- ".../Data/ecmwfsipn/ecmwfsipn_sip" 
 dyn_mod <- "ecmwfsipn"
 dyn_start_year <- 1993
 dat_type_pred <- "simple"
@@ -78,7 +94,7 @@ cont_bin_poly <- contour_shift(y = y_bc,
                              dat_type_pred)
 
 cont_bin <- conv_to_grid(cont_bin_poly)
-save(cont_bin, file = sprintf("/homes/direch/probForecast/results/cont_bin/cont_bin_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+save(cont_bin, file = sprintf(".../results/cont_bin/cont_bin_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
                               task_id,  month, forecast_year, train_start_year,  train_end_year, init_month))
 
 
@@ -141,8 +157,9 @@ for (r in regs_to_fit)  {
   print(sprintf("MCMC for region %i finished, elapsed time %f", r, elapse_time[3]))
 }
 
+#save all chain info in a few cases
 if (forecast_year == 2005 & lag  == 1) {
-	save(res, file = sprintf("/homes/direch/probForecast/results/cont_fits/cont_fit_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+	save(res, file = sprintf(".../results/cont_fits/cont_fit_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
 							 task_id, month, forecast_year, train_start_year, train_end_year, init_month))
 }
 #Compute mu and sigma for each region
@@ -167,10 +184,10 @@ for (r in regs_to_fit) {
 }
 
 conts <- merge_conts(conts = indiv_conts, full = full)
-save(conts, file = sprintf("/homes/direch/probForecast/results/cont_conts/cont_conts_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+save(conts, file = sprintf(".../results/cont_conts/cont_conts_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
                            task_id, month, forecast_year, train_start_year, train_end_year, init_month))
 cont_prob <- prob_map(merged = conts)
-save(cont_prob, file = sprintf("/homes/direch/probForecast/results/cont_prob/cont_prob_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
+save(cont_prob, file = sprintf(".../results/cont_prob/cont_prob_Task%i_Month%i_Year%i_Train%i_%i_Init%i.rda",
                                 task_id, month, forecast_year, train_start_year, train_end_year, init_month))
 print("completed cont_prob")
 

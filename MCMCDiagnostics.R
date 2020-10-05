@@ -1,8 +1,13 @@
-#Script for MCMC Diagnostics tables and figures in supplement
-#Focuses on forecast for September 2005 at 2-month lead
+#-------------------------------------------------------------------------------
+# Script to produce MCMC Diagnostic (produces Tables 1-3 and Figures 8-10 in 
+# Supplement)
+#
+# Requires Results: cont_fits (info on MCMC chains obtained with the 
+#                              fitAndGen.R script)
+#-------------------------------------------------------------------------------
 
 #load MCMC results
-load("/Users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Results/cont_fits/cont_fit_Task241_Month9_Year2005_Train1995_2004_Init8.rda")
+load("Results/cont_fits/cont_fit_Task241_Month9_Year2005_Train1995_2004_Init8.rda")
 
 #libraries
 library("coda") #for raftery.diag()
@@ -27,8 +32,7 @@ N_sigma_rd <- matrix(ncol = length(quants_to_assess) + 1, nrow = n_reg)
 M_sigma_rd <- matrix(ncol = length(quants_to_assess) + 1, nrow = n_reg)
 colnames(N_sigma_rd) <- c("Region", paste("N_", quants_to_assess, sep = ""))
 colnames(M_sigma_rd) <- c("Region", paste("M_", quants_to_assess, sep = ""))
-png(filename = sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_sigma.png",
-                       r), res = 100)
+#png(filename = sprintf("Paper/Figures/traceplot_sigma.png", r), res = 100)
 par(mfrow = c(3, 1), oma = rep(1, 4), mar = c(2, 4, 2, 2))
 for (j in 1:n_reg) {
   r <- regs_to_fit[j]
@@ -67,7 +71,7 @@ for (j in 1:n_reg) {
           xlab = "Iteration", ylab = expression(sigma),
           main = sprintf("%s", reg_names[j]))
 }
-dev.off()
+#dev.off()
 xtable(N_sigma_rd)
 
 
@@ -77,8 +81,7 @@ xtable(N_sigma_rd)
 N_mu_rd <- M_mu_rd <- matrix(ncol = length(quants_to_assess) + 1, nrow = n_reg)
 colnames(N_mu_rd) <- c("Region",paste("N_", quants_to_assess, sep = ""))
 colnames(M_mu_rd) <- c("Region",paste("M_", quants_to_assess, sep = ""))
-png(filename = sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_mu.png",
-                       r), res = 100)
+#png(filename = sprintf("Paper/Figures/traceplot_mu.png",  r), res = 100)
 par(mfrow = c(3, 1), oma = rep(1, 4), mar = c(2, 4, 2, 2))
 for (j in 1:n_reg) {
   r <- regs_to_fit[j]
@@ -112,7 +115,7 @@ for (j in 1:n_reg) {
        xlab = "Iteration", ylab = expression(sigma),
        main = sprintf("%s", reg_names[j]))
 }
-dev.off()
+#dev.off()
 xtable(N_mu_rd)
 
 #--------------------------
@@ -121,8 +124,7 @@ xtable(N_mu_rd)
 N_kappa_rd <- M_kappa_rd <-  matrix(ncol = 2, nrow = n_reg)
 colnames(N_kappa_rd) <- c("Region",  "N")
 colnames(M_kappa_rd) <- c("Region", "M")
-png(sprintf("/users/hdirector/Dropbox/SeaIce_InProgress/probContours_ECMWF/Paper/Figures/traceplot_kappa.png"),
-    res = 100)
+#png(sprintf("Paper/Figures/traceplot_kappa.png"), res = 100)
 par(mfrow = c(3, 1), oma = rep(1, 4), mar = c(2, 4, 2, 2))
 for (j in 1:n_reg) {
   r <- regs_to_fit[j]
@@ -133,7 +135,7 @@ for (j in 1:n_reg) {
   plot(1:n_iter, res[[r]]$kappa, type= 'l', xlab = "Iteration",
        ylab = expression(kappa), main = sprintf("Traceplot, %s", reg_names[j]))
 }
-dev.off()
+#dev.off()
 xtable(N_kappa_rd)
 
 
